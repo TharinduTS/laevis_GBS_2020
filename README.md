@@ -6,17 +6,19 @@ Copied those files into
 
 # Cal depth and move depth files to the folder
 ********** (always check file size after calculation to make sure the used region was present in all samples. If not, change the region)********
+bash script
 ```bash
+#!/bin/sh
 module load bwa
 module load samtools/1.10
 for i in ./../../bam_files/*.bam ; do samtools depth -r chr1L:1-10000000 $i > $i"_depth" ; done
+mv ./../../bam_files/*_depth ./../depth_files
 ```
-
-# move depth files to a different folder 
-
+run by
 ```bash
-mv ../bam_files/*_depth ./depth_files/
+bash cal_depth.sh
 ```
+
 
 # plot depth
 ```rscript
