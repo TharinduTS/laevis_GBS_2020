@@ -18,8 +18,24 @@ run by
 ```bash
 bash cal_depth.sh
 ```
+Removed sample with a lower depth value
+
+BJE3577_Kimber_TAACGA
+
+# seperate subgenomes 
+
+In the directory with all bam files
+``bash
+module load nixpkgs/16.09  intel/2016.4
+module load samtools/0.1.17
+
+for i in *.bam; do samtools index ${i}; done
+
+for i in *.bam;do samtools view -b $i chr1L chr2L chr3L chr4L chr5L chr6L chr7L chr8L chr9_10L > ../bams_L_only/L_only_${i} ;done
 
 
+for i in *.bam;do samtools view -b $i chr1S chr2S chr3S chr4S chr5S chr6S chr7S chr8S chr9_10S > ../bams_S_only/S_only_${i} ;done
+```
 # plot depth
 ```rscript
 
