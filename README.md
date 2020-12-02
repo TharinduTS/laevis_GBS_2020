@@ -192,7 +192,7 @@ angsd -bam all.files -GL 2 -doMajorMinor 1 -doMaf 1 -SNP_pval 2e-6 -minMapQ 20 -
 
 
 
-# ****************************** Cal Fst **************************************
+# ****************************** Cal Fst ***************************
 
 # Background
 Selected the bam files with a good depth value from above depth check step and used those bam files from here onwards
