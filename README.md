@@ -206,7 +206,7 @@ wget http://ftp.xenbase.org/pub/Genomics/JGI/Xenla9.2/XENLA_9.2_genome.fa.gz
 Observed addresses for all bam files
 ```bash
 find ../all_bam_files/ | tr "\n" " "
-``
+```
 
 Then used following script to create VCF using observed file list
 
