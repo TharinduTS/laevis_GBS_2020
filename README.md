@@ -176,6 +176,23 @@ find $BAMFOLDER |  grep bam$ > all.files
 angsd -bam all.files -GL 2 -doMajorMinor 1 -doMaf 1 -SNP_pval 2e-6 -minMapQ 20 -minQ 20 -doCounts 1 -doDepth 1 -setMinDepth 2 -setMaxDepth 100  -minInd 15 -minMaf 0.05 -doGlf 2 -out all -P 1
 ```
 
+# Then in each seperate folders
+
+```bash
+~/../../scratch/premacht/xlaevis_and_xgilli/NDSadmix/NGSadmix -likes all.beagle.gz -K 3 -minMaf 0.05 -seed 1 -o all
+
+for run in `seq 10`;   do   mkdir run_$run ; cd run_$run/;   for K in `seq 5`;     do ~/../../scratch/premacht/xlaevis_and_xgilli/NDSadmix/NGSadmix -likes ../all.beagle.gz -K $K -P 10 -o $K\_outfiles -minMaf 0.05;   done;   cd ../; done
+
+module load python/3.5.4
+
+cp ~/../../scratch/premacht/xlaevis_and_xgilli/clumpp_input_maker_new.py .
+
+for k in `seq 5` ; do python3 clumpp_input_maker_new.py -in run_*/${k}_*qopt -type ngsadmix -out k$k ; done
+
+for f in k*param ; do ../CLUMPP_Linux64.1.1.2/CLUMPP $f ; done
+
+```
+
 
 
 
