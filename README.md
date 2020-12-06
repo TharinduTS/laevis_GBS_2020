@@ -288,5 +288,7 @@ vcftools --vcf ./all_samples_varient_chrs_only_header_scaffolds_cleared.vcf --ke
 
 ```
 
+Then seperated these VCF files into seperate directories for subgenomes and whole genome
+
 
 
