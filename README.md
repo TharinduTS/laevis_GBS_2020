@@ -220,6 +220,13 @@ Downloaded reference genome
 ```bash
 wget http://ftp.xenbase.org/pub/Genomics/JGI/Xenla9.2/XENLA_9.2_genome.fa.gz
 ```
+Removed scaffolds from reference genome
+
+```bash
+module load bwa
+module load samtools/1.10
+
+samtools faidx XENLA_9.2_genome.fa chr1S chr2L chr2S chr3L chr3S chr4L chr4S chr5L chr5S chr6L chr6S chr7L chr7S chr8L chr8S chr9_10L chr9_10S > XENLA_9.2_genome_chrs_only.fs
 # In bam folder ,
 Observed addresses for all bam files
 ```bash
