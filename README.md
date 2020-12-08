@@ -4,6 +4,77 @@
 Received aligned and indexed data from Ben(.bam and .bai) Going to craete structure plots and cal Fst)
 Copied those files into 
 
+# Filter and prepare clear bam files
+
+```bash
+#!/bin/sh
+#SBATCH --job-name=bwa_505
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --time=24:00:00
+#SBATCH --mem=512gb
+#SBATCH --output=bwa505.%J.out
+#SBATCH --error=bwa505.%J.err
+#SBATCH --account=def-ben
+
+#SBATCH --mail-user=premacht@mcmaster.ca
+#SBATCH --mail-type=BEGIN
+#SBATCH --mail-type=END
+#SBATCH --mail-type=FAIL
+#SBATCH --mail-type=REQUEUE
+#SBATCH --mail-type=ALL
+
+module load bwa
+module load samtools/1.10
+module load nixpkgs/16.09
+module load intel/2018.3
+module load bcftools/1.10.2
+module load vcftools/0.1.16
+
+for i in *.bam; do
+
+# This part selects only chrs and saves an inbetween file
+
+samtools view -b ${i} chr1S chr2L chr2S chr3L chr3S chr4L chr4S chr5L chr5S chr6L chr6S chr7L chr7S chr8L chr8S chr9_10L chr9_10S > inbetween.bam
+
+#index inbetween bam
+samtools index inbetween.bam
+
+# Remove indels
+samtools view -h inbetween.bam | awk '$1 ~ "^@" || $6 !~ "I|D"' | samtools view -b > test.bam
+
+# sort for final output
+samtools sort test.bam -o ${i}_final_sorted.bam
+
+# Index the final output file
+
+samtools index ${i}_final_sorted.bam;done
+
+# Seperate L subgenome
+for i in *_final_sorted.bam;do samtools view -b $i chr1L chr2L chr3L chr4L chr5L chr6L chr7L chr8L chr9_10L > ${i}_L_only; done
+
+# Seperate S subgenome
+for i in *_final_sorted.bam;do samtools view -b $i chr1S chr2S chr3S chr4S chr5S chr6S chr7S chr8S chr9_10S > ${i}_S_only; done
+
+# Make directories for bamfiles for different genomes
+mkdir ../filtered_bam_files
+
+mkdir ../filtered_bam_files/whole_genome
+mkdir ../filtered_bam_files/s_only
+mkdir ../filtered_bam_files/l_only
+
+# Move files to corresponding directories
+mv *_final_sorted.bam ../filtered_bam_files/whole_genome
+mv *_L_only ../filtered_bam_files/l_only
+mv *_S_only ../filtered_bam_files/s_only
+
+
+# Make a directory for VCFs
+
+mkdir ../vcfs
+
+```
+
 # Cal depth and move depth files to the folder
 ********** (always check file size after calculation to make sure the used region was present in all samples. If not, change the region)********
 bash script
