@@ -71,6 +71,81 @@ mv *_S_only ../filtered_bam_files/s_only
 
 ```
 
+in one of the directories created by above script for subgenomes(eg-filtered_bam_files/s_only) run the following script.
+This will
+# sort and index bams again, prepare reference genome, create vcfs for all subgenomes, remove scaffolds and labels from header of the vcfs and store them in seperate folders created for them (These files will be ready to use for analysis) 
+
+```bash
+#!/bin/sh
+#SBATCH --job-name=bwa_505
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --time=24:00:00
+#SBATCH --mem=512gb
+#SBATCH --output=bwa505.%J.out
+#SBATCH --error=bwa505.%J.err
+#SBATCH --account=def-ben
+
+#SBATCH --mail-user=premacht@mcmaster.ca
+#SBATCH --mail-type=BEGIN
+#SBATCH --mail-type=END
+#SBATCH --mail-type=FAIL
+#SBATCH --mail-type=REQUEUE
+#SBATCH --mail-type=ALL
+
+module load bwa_and_create_vcf.sh (END)
+module load samtools/1.10
+module load nixpkgs/16.09
+module load intel/2018.3
+module load bcftools/1.10.2
+module load vcftools/0.1.16
+
+# Create a directory for reference genome
+mkdir ../reference_genome
+
+# Download reference genome, unzip it and move to the reference genome folder
+wget http://ftp.xenbase.org/pub/Genomics/JGI/Xenla9.2/XENLA_9.2_genome.fa.gz
+gunzip XENLA_9.2_genome.fa.gz
+mv XENLA_9.2_genome.fa* ../reference_genome
+
+# loop through all subgenomes
+
+for j in  ../*; do cd ${j}
+
+# previous sort had not worked correctly. So I had to sort again here before creating VCF
+for i in *bam_final_sorted.bam*; do samtools sort ${i} -o ${i%.bam_final_sorted.bam*}_final.bam
+        samtools index ${i%.bam_final_sorted.bam*}_final.bam;done
+
+
+# Create VCF
+samtools mpileup -q20 -d8000 -ugf ../reference_genome/XENLA_9.2_genome.fa *_final.bam | bcftools call -V indels --format-fields GQ -m -O z -O z -o laevis_GBS_2020_${j#../}.vcf.gz
+
+# unzip VCF
+gunzip laevis_GBS_2020_${j#../}.vcf.gz
+
+# Get sample list
+vcf-query -l laevis_GBS_2020_${j#../}.vcf > all_sample_list
+
+# Select chromosomes and remove scaffolds, remove scaffold from header (Selected chromosomes here moght not affect subgenomes here as bam files used are already filtered for subgenomes)
+
+vcftools --gzvcf laevis_GBS_2020_${j#../}.vcf --keep all_sample_list --chr chr1L --chr chr1S --chr chr2L --chr chr2S --chr chr3L --chr chr3S --chr chr4L --chr chr4S --chr chr5L --chr chr5S --chr chr6L --chr chr6S --chr chr7L --chr chr7S --chr chr8L --chr chr8S --chr chr9_10L --chr chr9_10S --non-ref-ac-any 1 --recode --recode-INFO-all --stdout | grep -v '^##contig=<ID=Scaffold' > laevis_GBS_2020_${j#../}_scaffolds_removed.vcf
+
+
+# create a folder for older files
+mkdir older_files
+
+#move older files there 
+
+mv *.bam_final_sorted.bam* ./older_files
+
+# make a folder for the VCF 
+mkdir ../vcf_${j#../}
+
+#move vcf there
+mv laevis_GBS_2020_${j#../}* ../vcf_${j#../}/ ;done
+```
+
+
 # Cal depth and move depth files to the folder
 ********** (always check file size after calculation to make sure the used region was present in all samples. If not, change the region)********
 bash script
