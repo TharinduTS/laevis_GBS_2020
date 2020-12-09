@@ -4,7 +4,7 @@
 Received aligned and indexed data from Ben(.bam and .bai) Going to craete structure plots and cal Fst)
 Copied those files into 
 
-# Filter and prepare clear bam files
+# Filter and prepare clear bam files (somehow sort at the end had not exactly done the job. So I had to sort and index again in next script)
 
 ```bash
 #!/bin/sh
@@ -68,10 +68,6 @@ mv *_final_sorted.bam ../filtered_bam_files/whole_genome
 mv *_L_only ../filtered_bam_files/l_only
 mv *_S_only ../filtered_bam_files/s_only
 
-
-# Make a directory for VCFs
-
-mkdir ../vcfs
 
 ```
 
