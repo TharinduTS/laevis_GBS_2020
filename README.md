@@ -93,7 +93,7 @@ This will
 #SBATCH --mail-type=REQUEUE
 #SBATCH --mail-type=ALL
 
-module load bwa_and_create_vcf.sh (END)
+module load bwa
 module load samtools/1.10
 module load nixpkgs/16.09
 module load intel/2018.3
