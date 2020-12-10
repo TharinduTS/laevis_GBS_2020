@@ -110,7 +110,7 @@ mv XENLA_9.2_genome.fa* ../reference_genome
 
 # loop through all subgenomes
 
-for j in  ../*; do cd ${j}
+for j in  ../l_only ../s_only ../whole_genome; do cd ${j}
 
 # previous sort had not worked correctly. So I had to sort again here before creating VCF
 for i in *bam_final_sorted.bam*; do samtools sort ${i} -o ${i%.bam_final_sorted.bam*}_final_${j#../}.bam
@@ -144,9 +144,6 @@ mkdir ../vcf_${j#../}
 #move vcf there
 mv laevis_GBS_2020_${j#../}* ../vcf_${j#../}/ ;done
 
-# remove unwanted reference genome vcf folder
-
-rm -r ../vcf_reference_genome
 ```
 
 
