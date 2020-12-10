@@ -71,7 +71,7 @@ mv *_S_only ../filtered_bam_files/s_only
 
 ```
 
-in one of the directories created by above script for subgenomes(eg-filtered_bam_files/s_only) run the following script.
+## in one of the directories created by above script for subgenomes(eg-filtered_bam_files/s_only) run the following script.
 This will
 # sort and index bams again, prepare reference genome, create vcfs for all subgenomes, remove scaffolds and labels from header of the vcfs and store them in seperate folders created for them (These files will be ready to use for analysis) 
 
