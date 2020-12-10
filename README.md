@@ -103,6 +103,9 @@ module load vcftools/0.1.16
 # Create a directory for reference genome
 mkdir ../reference_genome
 
+# Create a directory for filtered vcf files
+mkdir ../../filtered_VCFs
+
 # Download reference genome, unzip it and move to the reference genome folder
 wget http://ftp.xenbase.org/pub/Genomics/JGI/Xenla9.2/XENLA_9.2_genome.fa.gz
 gunzip XENLA_9.2_genome.fa.gz
@@ -139,10 +142,10 @@ mkdir older_files
 mv *.bam_final_sorted.bam* ./older_files
 
 # make a folder for the VCF 
-mkdir ../vcf_${j#../}
+mkdir mkdir ../../filtered_VCFs/vcf_${j#../}
 
 #move vcf there
-mv laevis_GBS_2020_${j#../}* ../vcf_${j#../}/ ;done
+mv laevis_GBS_2020_${j#../}* ../../filtered_VCFs/vcf_${j#../}/ ;done
 
 ```
 
