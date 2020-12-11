@@ -148,9 +148,22 @@ mkdir mkdir ../../filtered_VCFs/vcf_${j#../}
 mv laevis_GBS_2020_${j#../}* ../../filtered_VCFs/vcf_${j#../}/ ;done
 
 ```
+## Run following in one of the folders created for filtered bams by above script to collect finalized bams in a seperate folder
+
+ make a directory to collect all finalized bam files
+ ```bash
+mkdir ../../finalized_bam_files
+```
+
+ Collect all finalized bam files looping through all directories and place them in respective folders
+```bash
+for j in  ../l_only ../s_only ../whole_genome; do cd ${j}
+        mkdir ../../finalized_bam_files/finalized_bams_${j#../}
+        mv ./*final_${j#../}.bam* ../../finalized_bam_files/finalized_bams_${j#../} ; done
+```
 
 
-# Cal depth and move depth files to the folder
+# Cal depth and move depth files to the folder(If needed. Not going to use here now)
 ********** (always check file size after calculation to make sure the used region was present in all samples. If not, change the region)********
 bash script
 ```bash
