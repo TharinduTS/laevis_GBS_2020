@@ -161,6 +161,28 @@ for j in  ../l_only ../s_only ../whole_genome; do cd ${j}
         mkdir ../../finalized_bam_files/finalized_bams_${j#../}
         mv ./*final_${j#../}.bam* ../../finalized_bam_files/finalized_bams_${j#../} ; done
 ```
+# Filtering based on per site coverage
+
+```bash
+module load nixpkgs/16.09
+module load gatk/4.1.2.0
+```
+you may have to type “yes” here to access GATK
+Index reference genome (Use this if it has not been done already
+```bash
+module load bwa
+module load samtools/1.10
+samtools faidx XENLA_9.2_genome.fa
+```
+create GATk dictionary file for reference genome
+```bsh
+gatk --java-options "-Xmx2G" CreateSequenceDictionary -R   XENLA_9.2_genome.fa
+```
+ Create depth table using GATK
+ ```bash
+java -Xmx2g  -jar $EBROOTGATK/GenomeAnalysisTK.jar -T VariantsToTable -R ../../../reference_genome/XENLA_9.2_genome.fa -V laevis_GBS_2020_l_only_scaffolds_removed.vcf -F CHROM -F POS -GF DP -o GVCF_chr04_gf_DP.table
+```
+
 
 
 # Cal depth and move depth files to the folder(If needed. Not going to use here now)
