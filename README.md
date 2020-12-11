@@ -148,7 +148,7 @@ mkdir mkdir ../../filtered_VCFs/vcf_${j#../}
 mv laevis_GBS_2020_${j#../}* ../../filtered_VCFs/vcf_${j#../}/ ;done
 
 ```
-## Run following in one of the folders created for filtered bams by above script to collect finalized bams in a seperate folder
+## Run following in one of the folders created for filtered bams by the first script to collect finalized bams in a seperate folder(filtered_bam_files/l_only)
 
  make a directory to collect all finalized bam files
  ```bash
