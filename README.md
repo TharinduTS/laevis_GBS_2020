@@ -73,14 +73,30 @@ mv *_S_only ../filtered_bam_files/s_only
 
 ## in one of the directories created by above script for subgenomes(eg-filtered_bam_files/s_only) run the following script.
 This will
-# sort and index bams again, prepare reference genome, create vcfs for all subgenomes, remove scaffolds and labels from header of the vcfs and store them in seperate folders created for them (These files will be ready to use for analysis) 
+ 
+
+Run these in the filtered_bam_files/l_only folder to download and prepare reference genome
+```bash
+# Create a directory for reference genome
+mkdir ../reference_genome
+
+# Download reference genome, unzip it and move to the reference genome folder
+wget http://ftp.xenbase.org/pub/Genomics/JGI/Xenla9.2/XENLA_9.2_genome.fa.gz
+gunzip XENLA_9.2_genome.fa.gz
+mv XENLA_9.2_genome.fa* ../reference_genome
+
+module load bwa
+module load samtools/1.10
+samtools faidx ../reference_genome/XENLA_9.2_genome.fa
+```
+# sort and index bams again, create vcfs for all subgenomes, remove scaffolds and labels from header of the vcfs and store them in seperate folders created for them (These files will be ready to use for analysis)
 
 ```bash
 #!/bin/sh
 #SBATCH --job-name=bwa_505
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --time=48:00:00
+#SBATCH --time=24:00:00
 #SBATCH --mem=512gb
 #SBATCH --output=bwa505.%J.out
 #SBATCH --error=bwa505.%J.err
@@ -100,16 +116,9 @@ module load intel/2018.3
 module load bcftools/1.10.2
 module load vcftools/0.1.16
 
-# Create a directory for reference genome
-mkdir ../reference_genome
 
 # Create a directory for filtered vcf files
 mkdir ../../filtered_VCFs
-
-# Download reference genome, unzip it and move to the reference genome folder
-wget http://ftp.xenbase.org/pub/Genomics/JGI/Xenla9.2/XENLA_9.2_genome.fa.gz
-gunzip XENLA_9.2_genome.fa.gz
-mv XENLA_9.2_genome.fa* ../reference_genome
 
 # loop through all subgenomes
 
