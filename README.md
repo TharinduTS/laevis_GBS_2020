@@ -195,6 +195,10 @@ gatk --java-options "-Xmx2G" CreateSequenceDictionary -R   XENLA_9.2_genome.fa
  ```bash
 for j in ../*; do cd ${j}; module load nixpkgs/16.09; module load gatk/3.8; java -Xmx2G -jar $EBROOTGATK/GenomeAnalysisTK.jar -T VariantsToTable -R ../../../reference_genome/XENLA_9.2_genome.fa -V *_scaffolds_removed.vcf -F CHROM -F POS -GF DP -o GVCF_chr04_gf_DP.table ; done
 ```
+for j in ../*; do cd ${j};
+module load nixpkgs/16.09
+module load gatk/4.1.2.0
+gatk --java-options "-Xmx2G" -T VariantsToTable -R ../../../reference_genome/XENLA_9.2_genome.fa -V *_scaffolds_removed.vcf -F CHROM -F POS -GF DP -o GVCF_chr04_gf_DP.table ; done
 
 
 
