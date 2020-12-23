@@ -193,12 +193,28 @@ gatk --java-options "-Xmx2G" CreateSequenceDictionary -R   XENLA_9.2_genome.fa
 ```
  Create depth table using GATK for all genomes(in /filtered_VCFs/vcf_l_only)
  ```bash
-for j in ../*; do cd ${j}; module load nixpkgs/16.09; module load gatk/3.8; java -Xmx2G -jar $EBROOTGATK/GenomeAnalysisTK.jar -T VariantsToTable -R ../../../reference_genome/XENLA_9.2_genome.fa -V *_scaffolds_removed.vcf -F CHROM -F POS -GF DP -o GVCF_chr04_gf_DP.table ; done
-```
-for j in ../*; do cd ${j};
+#!/bin/sh
+#SBATCH --job-name=bwa_505
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --time=48:00:00
+#SBATCH --mem=512gb
+#SBATCH --output=bwa505.%J.out
+#SBATCH --error=bwa505.%J.err
+#SBATCH --account=def-ben
+
+#SBATCH --mail-user=premacht@mcmaster.ca
+#SBATCH --mail-type=BEGIN
+#SBATCH --mail-type=END
+#SBATCH --mail-type=FAIL
+#SBATCH --mail-type=REQUEUE
+#SBATCH --mail-type=ALL
+
 module load nixpkgs/16.09
-module load gatk/4.1.2.0
-gatk --java-options "-Xmx2G" -T VariantsToTable -R ../../../reference_genome/XENLA_9.2_genome.fa -V *_scaffolds_removed.vcf -F CHROM -F POS -GF DP -o GVCF_chr04_gf_DP.table ; done
+module load gatk/3.8
+
+for j in ../*; do cd ${j}; java -Xmx16G -jar $EBROOTGATK/GenomeAnalysisTK.jar -T VariantsToTable -R ../../../reference_genome/XENLA_9.2_genome.fa -V *_scaffolds_removed.vcf -F CHROM -F POS -GF DP -o GVCF_DP.table ; done
+```
 
 
 
