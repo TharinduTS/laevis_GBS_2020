@@ -192,6 +192,8 @@ module load gatk/4.1.2.0
 gatk --java-options "-Xmx2G" CreateSequenceDictionary -R   XENLA_9.2_genome.fa
 ```
  Create depth table using GATK for all genomes(in /filtered_VCFs/vcf_l_only)
+ 
+ ** You will not be able to get enough memory for java(like -Xmx16G) if you use bash to run script(max is 1/4 th of the physical memory you ask for). Therefore to test, submit job like this and keep checking .err file **
  ```bash
 #!/bin/sh
 #SBATCH --job-name=bwa_505
