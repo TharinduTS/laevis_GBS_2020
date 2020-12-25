@@ -390,7 +390,7 @@ write.table(to_file, gsub("GVCF_DP.table","positions_to_exclude.txt",files), app
 
 
 
-#************************* NOT USED BELOW *******************************
+ ## ************************* DID NOT USE BELOW THIS POINT IN FINAL ATTEMPT  *******************************
 
 # Cal depth and move depth files to the folder(If needed. Not going to use here now)
 ********** (always check file size after calculation to make sure the used region was present in all samples. If not, change the region)********
