@@ -223,7 +223,7 @@ Run this where the DP.Table file is from the previous script
 
 ```R
 # set working directory to current script directory 
-**uncomment this if you use this in local computer. KEEP COMMENTED OUT IF YOU ARE ON COMPUTECANADA) ***
+# **uncomment this if you use this in local computer. KEEP COMMENTED OUT IF YOU ARE ON COMPUTECANADA) ***
 # setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
 library (ggplot2)
