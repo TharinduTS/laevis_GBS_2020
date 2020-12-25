@@ -414,7 +414,7 @@ module load vcftools/0.1.16
 
 for j in ../vcf*;do
        cd ${j}
-vcftools --vcf laevis_GBS_2020_${j#../vcf_}_scaffolds_removed.vcf --out laevis_GBS_2020_${j#../}_positions_excluded.vcf --exclude-positions *positions_to_exclude.txt --recode ;done
+vcftools --vcf laevis_GBS_2020_${j#../vcf_}_scaffolds_removed.vcf --out laevis_GBS_2020_${j#../}_positions_excluded --exclude-positions *positions_to_exclude.txt --recode ;done
 
 ```
 
