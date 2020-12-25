@@ -405,7 +405,18 @@ for j in ../vcf*;do
         
 ```
 
+# Filter above selected sites using vcftools
 
+```bash
+module load nixpkgs/16.09
+module load intel/2018.3
+module load vcftools/0.1.16
+
+for j in ../vcf*;do
+       cd ${j}
+vcftools --vcf laevis_GBS_2020_${j#../vcf_}_scaffolds_removed.vcf --out laevis_GBS_2020_${j#../}_positions_excluded.vcf --exclude-positions *positions_to_exclude.txt --recode ;done
+
+```
 
 
 
