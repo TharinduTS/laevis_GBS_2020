@@ -217,13 +217,14 @@ module load gatk/3.8
 
 for j in ../*; do cd ${j}; java -Xmx16G -jar $EBROOTGATK/GenomeAnalysisTK.jar -T VariantsToTable -R ../../../reference_genome/XENLA_9.2_genome.fa -V *_scaffolds_removed.vcf -F CHROM -F POS -GF DP -o laevis_GBS_2020_${j#../}_GVCF_DP.table ; done
 ```
-# Cal moving average depath, cal cutoffs , plot mean_over_cuttoff and output a file with sites to exclude, ready to be used by VCFtools in the next step
+# Cal moving average depath, cal cutoffs , plot mean_over_cuttoff and output a file with sites to exclude, ready to be used by VCFtools in the next step (to run this for all genomes together, copied this script in saved_scripts_to_be_used and ran the script following this)
 
 Run this where the DP.Table file is from the previous script
 
 ```R
-# set working directory to current script directory
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+# set working directory to current script directory 
+**uncomment this if you use this in local computer. KEEP COMMENTED OUT IF YOU ARE ON COMPUTECANADA) ***
+# setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
 library (ggplot2)
 
@@ -382,7 +383,27 @@ to_file <- data.frame(sub$CHROM, sub$POS)
 write.table(to_file, gsub("GVCF_DP.table","positions_to_exclude.txt",files), append = FALSE, sep = "\t", dec = ".",
             row.names = F, col.names = F,quote = FALSE)
 ```
+# Run the above script for all subgenomes at once 
 
+Copied the script in saved_scripts_to_be_used first.
+and then,
+
+Load R
+
+```bash
+module load nixpkgs/16.09
+module load gcc/7.3.0
+module load r
+```
+to run script in all directories, use the following command in filtered_VCFs/vcf_l_only
+
+```bash
+for j in ../vcf*;do
+       cd ${j}
+        cp /scratch/premacht/laevis_GBS_2020/saved_scripts_to_be_used/cal_moving_dp_and_find_excludes.r .
+        Rscript cal_moving_dp_and_find_excludes.r ;done
+        
+```
 
 
 
