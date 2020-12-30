@@ -432,7 +432,29 @@ Copy parseVCF.py from https://github.com/simonhmartin/genomics_general/blob/mast
 
 then,
 
+Load python, create vitual env in home directory, activate it, upgrade pip in the environment and install numpy package(ENV  is the name of the empty directory containing your environment)
+
 ```bash
+module load python/3.8.2
+virtualenv --no-download ~/ENV
+source ~/ENV/bin/activate
+pip install --no-index --upgrade pip
+pip install numpy --no-index
+```
+Then convert VCF into geno format and move them to a newly created directory
+```bash
+for j in *positions_excluded.recode.vcf ; do python parseVCF.py -i ${j} -o ${j%%recode.vcf}geno ; done
+mkdir ../geno_files
+mv *.geno ../geno_files/
+```
+
+
+
+* When you want to exit environment, use
+```bash
+(ENV) [name@server ~] deactivate
+```
+
 
 
 
