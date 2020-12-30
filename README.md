@@ -418,6 +418,22 @@ vcftools --vcf laevis_GBS_2020_${j#../vcf_}_scaffolds_removed.vcf --out laevis_G
 
 ```
 
+#  Run following in the filtered_VCFs/vcf_l_only to collect finalized VCFs in a new directory to be used in the next steps.
+
+```bash
+mkdir ../../finalized_vcf_files
+
+for j in  ../*l_only ../*s_only ../*whole_genome; do cd ${j}
+mv ./*positions_excluded.recode.vcf ../../finalized_vcf_files ; done
+
+```
+
+Copy parseVCF.py from https://github.com/simonhmartin/genomics_general/blob/master/VCF_processing/parseVCF.py to finalized_vcf_files making a vi file with the same name(parseVCF.py)
+
+then,
+
+```bash
+
 
 
 
