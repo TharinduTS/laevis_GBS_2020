@@ -447,13 +447,19 @@ for j in *positions_excluded.recode.vcf ; do python parseVCF.py -i ${j} -o ${j%%
 mkdir ../geno_files
 mv *.geno ../geno_files/
 ```
-
-
+Then it is necessary to swap any astrisks with Ns: run following in geno_files folder
+then move older files to a new directory
+```bash
+for j in *.geno; do sed -i 's/\*/N/g' ${j} > ${j%%.geno}_astrisks_swapped.geno ; done
+mkdir old_genos
+mv *excluded.geno old_genos/
+```
 
 * When you want to exit environment, use
 ```bash
 (ENV) [name@server ~] deactivate
 ```
+
 
 
 
