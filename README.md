@@ -474,6 +474,7 @@ and
 2.copy python script from https://github.com/simonhmartin/genomics_general/blob/master/popgenWindows.py 
 as well.
 3.Create a populatin file (--popsFile) , which has two columns: the first gives sample names and teh second gives population name:
+4. zip the geno files
 
 you can get a list of file names 
 
