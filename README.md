@@ -3,6 +3,7 @@
 # Background
 Received aligned and indexed data from Ben(.bam and .bai) Going to craete structure plots and cal Fst)
 Copied those files into 
+** all the related scripts can be found in /scratch/premacht/laevis_GBS_2020/saved_scripts_to_be_used **
 
 # Filter and prepare clear bam files (somehow sort at the end had not exactly done the job. So I had to sort and index again in next script)
 
@@ -429,6 +430,7 @@ mv ./*positions_excluded.recode.vcf ../../finalized_vcf_files ; done
 ```
 
 Copy parseVCF.py from https://github.com/simonhmartin/genomics_general/blob/master/VCF_processing/parseVCF.py to finalized_vcf_files making a vi file with the same name(parseVCF.py)
+** For some reason, you cannot paste python scripts directly to a file named xxxx.py. Therefore you may have to copy it to a vi file with a different name and then rename it as needed for the python script. **
 
 then,
 
@@ -450,7 +452,8 @@ mv *.geno ../geno_files/
 Then it is necessary to swap any astrisks with Ns: run following in geno_files folder
 then move older files to a new directory
 ```bash
-for j in *.geno; do sed -i 's/\*/N/g' ${j} > ${j%%.geno}_astrisks_swapped.geno ; done
+for j in *.geno; do sed -i 's/\*/N/g' ${j}
+gzip -c ${j} > ${j%%.geno}_astrisks_swapped.geno ; done
 mkdir old_genos
 mv *excluded.geno old_genos/
 ```
@@ -459,6 +462,25 @@ mv *excluded.geno old_genos/
 ```bash
 (ENV) [name@server ~] deactivate
 ```
+
+# Calculating Fst with geno files
+
+** needed help forthese steps can be found in https://github.com/simonhmartin/genomics_general#diversity-and-divergence-analyses-in-sliding-windows **
+
+following files are needed for the script to work
+
+1.copy python script from https://github.com/simonhmartin/genomics_general/blob/master/genomics.py to the directory with geno files.
+and
+2.copy python script from https://github.com/simonhmartin/genomics_general/blob/master/popgenWindows.py 
+as well.
+3.Create a populatin file (--popsFile) , which has two columns: the first gives sample names and teh second gives population name:
+
+you can get a list of file names 
+
+all these should be in the same folder
+
+
+
 
 
 
