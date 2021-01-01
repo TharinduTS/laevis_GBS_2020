@@ -449,14 +449,7 @@ for j in *positions_excluded.recode.vcf ; do python parseVCF.py -i ${j} -o ${j%%
 mkdir ../geno_files
 mv *.geno ../geno_files/
 ```
-Then it is necessary to swap any astrisks with Ns: run following in geno_files folder
-then move older files to a new directory
-```bash
-for j in *.geno; do sed -i 's/\*/N/g' ${j}
-gzip -c ${j} > ${j%%.geno}_astrisks_swapped.geno ; done
-mkdir old_genos
-mv *excluded.geno old_genos/
-```
+
 
 * When you want to exit environment, use
 ```bash
@@ -465,23 +458,42 @@ mv *excluded.geno old_genos/
 
 # Calculating Fst with geno files
 
-** needed help forthese steps can be found in https://github.com/simonhmartin/genomics_general#diversity-and-divergence-analyses-in-sliding-windows **
+** needed help for these steps can be found in https://github.com/simonhmartin/genomics_general#diversity-and-divergence-analyses-in-sliding-windows **
 
-following files are needed for the script to work
+following files are needed in the directory with geno files for the script to work
 
 1.copy python script from https://github.com/simonhmartin/genomics_general/blob/master/genomics.py to the directory with geno files.
 and
 2.copy python script from https://github.com/simonhmartin/genomics_general/blob/master/popgenWindows.py 
 as well.
-3.Create a populatin file (--popsFile) , which has two columns: the first gives sample names and teh second gives population name:
-4. zip the geno files
+3.Create a populatin file (--popsFile) , which has two columns: the first gives sample names and teh second gives population name:(you can use excel and save the output as txt)
 
-you can get a list of file names 
+eg:
+```txt
+JM_no_label1_Draken_CCACGT_cuttrim_sorted_final_l_only.bam      popC
+JM_no_label2_Draken_TTCAGA_cuttrim_sorted_final_l_only.bam      popD
+```
+4. Needed geno files
 
-all these should be in the same folder
+Then 
+# Calculate standard population genomic statistics in sliding windows: pi, FST and DXY using following command 
+(explanations about the flags used can be found in the help link above)
+(you may include command "--writeFailedWindows" if you get an empty output file, it should always write something in the output file, even if all results are NA)
+
+```bash
+python popgenWindows.py -w 50000 -m 50 -g laevis_GBS_2020_vcf_l_only_positions_excluded.geno -o output.csv.gz -f phased --popsFile pops.txt
+```
 
 
 
+**To be used for ABBABABA** it is necessary to swap any astrisks with Ns: run following in geno_files folder
+then move older files to a new directory
+```bash
+for j in *.geno; do sed -i 's/\*/N/g' ${j}
+gzip -c ${j} > ${j%%.geno}_astrisks_swapped.geno ; done
+mkdir old_genos
+mv *excluded.geno old_genos/
+```
 
 
 
