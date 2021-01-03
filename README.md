@@ -6,6 +6,7 @@ Copied those files into
 ** all the related scripts can be found in /scratch/premacht/laevis_GBS_2020/saved_scripts_to_be_used **
 
 # Filter and prepare clear bam files (somehow sort at the end had not exactly done the job. So I had to sort and index again in next script)
+Run this script in the folder with bam files
 
 ```bash
 #!/bin/sh
@@ -57,6 +58,9 @@ for i in *_final_sorted.bam;do samtools view -b $i chr1L chr2L chr3L chr4L chr5L
 # Seperate S subgenome
 for i in *_final_sorted.bam;do samtools view -b $i chr1S chr2S chr3S chr4S chr5S chr6S chr7S chr8S chr9_10S > ${i}_S_only; done
 
+# Seperate whole genome/ without scaffolds
+for i in *_final_sorted.bam;do samtools view -b $i chr1S chr2L chr2S chr3L chr3S chr4L chr4S chr5L chr5S chr6L chr6S chr7L chr7S chr8L chr8S chr9_10L chr9_10S > ${i}_whole_genome; done
+
 # Make directories for bamfiles for different genomes
 mkdir ../filtered_bam_files
 
@@ -65,12 +69,14 @@ mkdir ../filtered_bam_files/s_only
 mkdir ../filtered_bam_files/l_only
 
 # Move files to corresponding directories
-mv *_final_sorted.bam ../filtered_bam_files/whole_genome
+mv *whole_genome ../filtered_bam_files/whole_genome
 mv *_L_only ../filtered_bam_files/l_only
 mv *_S_only ../filtered_bam_files/s_only
 
 
 ```
+
+# ====>> You can start population structure analysis with these data as described after Fst =======>>>>>>
 
 ## in one of the directories created by above script for subgenomes(eg-filtered_bam_files/s_only) run the following script.
 This will
@@ -483,6 +489,34 @@ Then
 ```bash
 python popgenWindows.py -w 50000 -m 50 -g laevis_GBS_2020_vcf_l_only_positions_excluded.geno -o output.csv.gz -f phased --popsFile pops.txt
 ```
+
+
+## ===========>>>>> POPULATION STRUCTURE ANALYSIS ===========>>>>>>>
+
+This starts with the filtered and finalized bam files from above
+
+First copy only the bam files to a new directory
+in the directory with the filtered_bam_files folder from above,
+
+```bash
+find ./filtered_bam_files/ -name '*.bam' | cpio -pdm  pop_structure/
+```
+
+Then *in the pop_structure folder* run the following.
+This will,
+load ANGSD, Set paths to the programs and the data(use the corresponding directories), 
+```
+module load nixpkgs/16.09
+module load intel/2018.3
+module load angsd/0.929
+
+AA=/scratch/premacht/xlaevis_and_xgilli/ANGSD
+
+mkdir angsd_outputs
+
+
+```
+
 
 
 
