@@ -53,13 +53,13 @@ samtools sort test.bam -o ${i}_final_sorted.bam
 samtools index ${i}_final_sorted.bam;done
 
 # Seperate L subgenome
-for i in *_final_sorted.bam;do samtools view -b $i chr1L chr2L chr3L chr4L chr5L chr6L chr7L chr8L chr9_10L > ${i}_L_only; done
+for i in *_final_sorted.bam;do samtools view -b $i chr1L chr2L chr3L chr4L chr5L chr6L chr7L chr8L chr9_10L > ${i%%cuttrim_sorted.bam_final_sorted.bam}final_l_only.bam; done
 
 # Seperate S subgenome
-for i in *_final_sorted.bam;do samtools view -b $i chr1S chr2S chr3S chr4S chr5S chr6S chr7S chr8S chr9_10S > ${i}_S_only; done
+for i in *_final_sorted.bam;do samtools view -b $i chr1S chr2S chr3S chr4S chr5S chr6S chr7S chr8S chr9_10S > ${i%%cuttrim_sorted.bam_final_sorted.bam}final_s_only.bam; done
 
 # Seperate whole genome/ without scaffolds
-for i in *_final_sorted.bam;do samtools view -b $i chr1S chr2L chr2S chr3L chr3S chr4L chr4S chr5L chr5S chr6L chr6S chr7L chr7S chr8L chr8S chr9_10L chr9_10S > ${i}_whole_genome; done
+for i in *_final_sorted.bam;do samtools view -b $i chr1S chr2L chr2S chr3L chr3S chr4L chr4S chr5L chr5S chr6L chr6S chr7L chr7S chr8L chr8S chr9_10L chr9_10S > ${i%%cuttrim_sorted.bam_final_sorted.bam}final_whole_genome.bam; done
 
 # Make directories for bamfiles for different genomes
 mkdir ../filtered_bam_files
@@ -69,9 +69,9 @@ mkdir ../filtered_bam_files/s_only
 mkdir ../filtered_bam_files/l_only
 
 # Move files to corresponding directories
-mv *whole_genome ../filtered_bam_files/whole_genome
-mv *_L_only ../filtered_bam_files/l_only
-mv *_S_only ../filtered_bam_files/s_only
+mv *whole_genome.ba* ../filtered_bam_files/whole_genome
+mv *_L_only.ba* ../filtered_bam_files/l_only
+mv *_S_only.ba* ../filtered_bam_files/s_only
 
 
 ```
