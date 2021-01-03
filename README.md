@@ -53,13 +53,13 @@ samtools sort test.bam -o ${i}_final_sorted.bam
 samtools index ${i}_final_sorted.bam;done
 
 # Seperate L subgenome
-for i in *_final_sorted.bam;do samtools view -b $i chr1L chr2L chr3L chr4L chr5L chr6L chr7L chr8L chr9_10L > ${i%%cuttrim_sorted.bam_final_sorted.bam}final_l_only.bam; done
+for i in *_final_sorted.bam;do samtools view -b $i chr1L chr2L chr3L chr4L chr5L chr6L chr7L chr8L chr9_10L > ${i%%cuttrim_sorted.bam_final_sorted.bam}before_final_l_only.bam; done
 
 # Seperate S subgenome
-for i in *_final_sorted.bam;do samtools view -b $i chr1S chr2S chr3S chr4S chr5S chr6S chr7S chr8S chr9_10S > ${i%%cuttrim_sorted.bam_final_sorted.bam}final_s_only.bam; done
+for i in *_final_sorted.bam;do samtools view -b $i chr1S chr2S chr3S chr4S chr5S chr6S chr7S chr8S chr9_10S > ${i%%cuttrim_sorted.bam_final_sorted.bam}before_final_s_only.bam; done
 
 # Seperate whole genome/ without scaffolds
-for i in *_final_sorted.bam;do samtools view -b $i chr1S chr2L chr2S chr3L chr3S chr4L chr4S chr5L chr5S chr6L chr6S chr7L chr7S chr8L chr8S chr9_10L chr9_10S > ${i%%cuttrim_sorted.bam_final_sorted.bam}final_whole_genome.bam; done
+for i in *_final_sorted.bam;do samtools view -b $i chr1S chr2L chr2S chr3L chr3S chr4L chr4S chr5L chr5S chr6L chr6S chr7L chr7S chr8L chr8S chr9_10L chr9_10S > ${i%%cuttrim_sorted.bam_final_sorted.bam}before_final_whole_genome.bam; done
 
 # Make directories for bamfiles for different genomes
 mkdir ../filtered_bam_files
@@ -75,8 +75,6 @@ mv *_s_only.ba* ../filtered_bam_files/s_only
 
 
 ```
-
-# ====>> You can start population structure analysis with these data as described after Fst =======>>>>>>
 
 ## in one of the directories created by above script for subgenomes(eg-filtered_bam_files/s_only) run the following script.
 This will
@@ -134,8 +132,8 @@ mkdir ../../filtered_VCFs
 for j in  ../l_only ../s_only ../whole_genome; do cd ${j}
 
 # previous sort had not worked correctly. So I had to sort again here before creating VCF
-for i in *bam_final_sorted.bam*; do samtools sort ${i} -o ${i%.bam_final_sorted.bam*}_final_${j#../}.bam
-        samtools index ${i%.bam_final_sorted.bam*}_final_${j#../}.bam;done
+for i in *before_final*bam; do samtools sort ${i} -o ${i%*before_final*bam}_final_${j#../}.bam
+        samtools index ${i%*before_final*bam}_final_${j#../}.bam;done
 
 
 # Create VCF
@@ -166,6 +164,7 @@ mkdir mkdir ../../filtered_VCFs/vcf_${j#../}
 mv laevis_GBS_2020_${j#../}* ../../filtered_VCFs/vcf_${j#../}/ ;done
 
 ```
+
 ## Run following in one of the folders created for filtered bams by the first script to collect finalized bams in a seperate folder(filtered_bam_files/l_only, PNLY IF NEEDED)
 
  make a directory to collect all finalized bam files
@@ -179,6 +178,8 @@ for j in  ../l_only ../s_only ../whole_genome; do cd ${j}
         mkdir ../../finalized_bam_files/finalized_bams_${j#../}
         mv ./*final_${j#../}.bam* ../../finalized_bam_files/finalized_bams_${j#../} ; done
 ```
+# ====>> You can start population structure analysis with these data(finalised bams from the step above) as described after Fst =======>>>>>
+
 # Filtering based on per site coverage
 
 ```bash
