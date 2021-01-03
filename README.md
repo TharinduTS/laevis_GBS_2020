@@ -98,6 +98,8 @@ samtools faidx ../reference_genome/XENLA_9.2_genome.fa
 
 ** Processing all files this way might take lot of time. In that case, modify the outer for loop and use this script to submit jobs parallely for seperate genomes(leaving just one genome as j at a time)
 
+Run in filtered_bam_files/l_only
+
 ```bash
 #!/bin/sh
 #SBATCH --job-name=bwa_505
@@ -161,7 +163,7 @@ mv laevis_GBS_2020_${j#../}* ../../filtered_VCFs/vcf_${j#../}/ ;done
 
 ```
 
-## Run following in one of the folders created for filtered bams by the first script to collect finalized bams in a seperate folder(filtered_bam_files/l_only, ONLY IF NEEDED)
+## Run following in one of the folders created for filtered bams by the first script to collect finalized bams in a seperate folder(filtered_bam_files/l_only)
 
  make a directory to collect all finalized bam files
  ```bash
@@ -174,7 +176,7 @@ for j in  ../l_only ../s_only ../whole_genome; do cd ${j}
         mkdir ../../finalized_bam_files/finalized_bams_${j#../}
         mv ./*final_${j#../}.bam* ../../finalized_bam_files/finalized_bams_${j#../} ; done
 ```
-# ====>> You can start population structure analysis with these data(finalised bams from the step above) as described after Fst =======>>>>>
+# ====>> You can start population structure analysis with these data(finalized bams from the step above) as described after Fst =======>>>>>
 
 # Filtering based on per site coverage
 
@@ -183,7 +185,7 @@ module load nixpkgs/16.09
 module load gatk/4.1.2.0
 ```
 you may have to type “yes” here to access GATK
-Index reference genome (Use this if it has not been done already
+Index reference genome (Use this if it has not been done already)
 ```bash
 module load bwa
 module load samtools/1.10
@@ -490,13 +492,13 @@ python popgenWindows.py -w 50000 -m 50 -g laevis_GBS_2020_vcf_l_only_positions_e
 
 ## ===========>>>>> POPULATION STRUCTURE ANALYSIS ===========>>>>>>>
 
-This starts with the filtered and finalized bam files from above
+This starts with the finalized bam files from above
 
 First copy only the bam files to a new directory
-in the directory with the filtered_bam_files folder from above,
+in the directory with the finalized_bam_files folder from above,
 
 ```bash
-find ./filtered_bam_files/ -name '*.bam' | cpio -pdm  pop_structure/
+find ./finalized_bam_files/ -name '*.bam' | cpio -pdm  pop_structure/
 ```
 
 Then *in the pop_structure folder* run the following.
