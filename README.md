@@ -132,8 +132,8 @@ mkdir ../../filtered_VCFs
 for j in  ../l_only ../s_only ../whole_genome; do cd ${j}
 
 # previous sort had not worked correctly. So I had to sort again here before creating VCF
-for i in *before_final*bam; do samtools sort ${i} -o ${i%*before_final*bam}_final_${j#../}.bam
-        samtools index ${i%*before_final*bam}_final_${j#../}.bam;done
+for i in *_before_final*bam; do samtools sort ${i} -o ${i%*_before_final*bam}_final_${j#../}.bam
+        samtools index ${i%*_before_final*bam}_final_${j#../}.bam;done
 
 
 # Create VCF
