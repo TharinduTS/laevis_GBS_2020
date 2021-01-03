@@ -519,6 +519,15 @@ angsd -bam ${j}_file_list -GL 2 -doMajorMinor 1 -doMaf 1 -SNP_pval 2e-6 -minMapQ
 mkdir angsd_outputs
 for i in l_only s_only whole_genome; do mkdir angsd_outputs/${i}; mv finalized_bam_files/*${i}_angsd_output* angsd_outputs/${i} ; done
 ```
+# Download and install NGSadmix 
+
+In pop structure folder,
+```bash
+mkdir ngsadmix
+cd ngsadmix
+wget https://raw.githubusercontent.com/ANGSD/angsd/master/misc/ngsadmix32.cpp
+g++ ngsadmix32.cpp -O3 -lpthread -lz -o NGSadmix
+```
 
 
 # =========>>>>>  FOR ABBABABA ============>>>>
