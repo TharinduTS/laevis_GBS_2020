@@ -135,6 +135,9 @@ for j in  ../l_only ../s_only ../whole_genome; do cd ${j}
 for i in *_before_final*bam; do samtools sort ${i} -o ${i%*_before_final*bam}_final_${j#../}.bam
         samtools index ${i%*_before_final*bam}_final_${j#../}.bam;done
 
+# move older files to a seperate folder
+mkdir bams_before_final
+mv *before_final* bams_before_final
 
 # Create VCF
 bcftools mpileup -a FORMAT/DP -q20 -d8000 -f ../reference_genome/XENLA_9.2_genome.fa *_final_${j#../}.bam | bcftools call -V indels --format-fields GQ -m -O z -O z -o laevis_GBS_2020_${j#../}.vcf.gz
