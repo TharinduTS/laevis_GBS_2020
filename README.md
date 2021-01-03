@@ -153,13 +153,6 @@ vcf-query -l laevis_GBS_2020_${j#../}.vcf > all_sample_list
 vcftools --gzvcf laevis_GBS_2020_${j#../}.vcf --keep all_sample_list --chr chr1L --chr chr1S --chr chr2L --chr chr2S --chr chr3L --chr chr3S --chr chr4L --chr chr4S --chr chr5L --chr chr5S --chr chr6L --chr chr6S --chr chr7L --chr chr7S --chr chr8L --chr chr8S --chr chr9_10L --chr chr9_10S --non-ref-ac-any 1 --recode --recode-INFO-all --stdout | grep -v '^##contig=<ID=Scaffold' > laevis_GBS_2020_${j#../}_scaffolds_removed.vcf
 
 
-# create a folder for older files
-mkdir older_files
-
-#move older files there 
-
-mv *.bam_final_sorted.bam* ./older_files
-
 # make a folder for the VCF 
 mkdir mkdir ../../filtered_VCFs/vcf_${j#../}
 
@@ -168,7 +161,7 @@ mv laevis_GBS_2020_${j#../}* ../../filtered_VCFs/vcf_${j#../}/ ;done
 
 ```
 
-## Run following in one of the folders created for filtered bams by the first script to collect finalized bams in a seperate folder(filtered_bam_files/l_only, PNLY IF NEEDED)
+## Run following in one of the folders created for filtered bams by the first script to collect finalized bams in a seperate folder(filtered_bam_files/l_only, ONLY IF NEEDED)
 
  make a directory to collect all finalized bam files
  ```bash
