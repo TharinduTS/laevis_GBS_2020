@@ -70,8 +70,8 @@ mkdir ../filtered_bam_files/l_only
 
 # Move files to corresponding directories
 mv *whole_genome.ba* ../filtered_bam_files/whole_genome
-mv *_L_only.ba* ../filtered_bam_files/l_only
-mv *_S_only.ba* ../filtered_bam_files/s_only
+mv *_l_only.ba* ../filtered_bam_files/l_only
+mv *_s_only.ba* ../filtered_bam_files/s_only
 
 
 ```
