@@ -510,14 +510,18 @@ module load intel/2018.3
 module load angsd/0.929
 
 AA=/scratch/premacht/xlaevis_and_xgilli/ANGSD
+```
+Run ollowing in the pop_structure folder to get angsd outputs for all genomes and collect them in corresponding folders
+```bash
+for j in finalized_bam_files/*; do find ${j} | grep bam$ > ${j}_file_list 
+angsd -bam ${j}_file_list -GL 2 -doMajorMinor 1 -doMaf 1 -SNP_pval 2e-6 -minMapQ 20 -minQ 20 -doCounts 1 -doDepth 1 -setMinDepth 2 -setMaxDepth 100  -minInd 1 -minMaf 0.05 -doGlf 2 -out ${j}_angsd_output -p 1; done
 
 mkdir angsd_outputs
-
-
+for i in l_only s_only whole_genome; do mkdir angsd_outputs/${i}; mv finalized_bam_files/*${i}_angsd_output* angsd_outputs/${i} ; done
 ```
 
 
-
+# =========>>>>>  FOR ABBABABA ============>>>>
 
 **To be used for ABBABABA** it is necessary to swap any astrisks with Ns: run following in geno_files folder
 then move older files to a new directory
