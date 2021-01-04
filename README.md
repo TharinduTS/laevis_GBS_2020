@@ -521,22 +521,253 @@ for i in l_only s_only whole_genome; do mkdir angsd_outputs/${i}; mv finalized_b
 ```
 # Download and install NGSadmix 
 
+First, save this python script on saved_scripts_to_be_used (whereveer you keep all the re-using scripts and change address accordingly in the future) as clumpp_input_maker_new.py
+
+```python
+"""
+
+This will take files from multiple runs of a particular K (from, say, Structure, or NGSAdmix), create a clumpp input file, and recommend the clumpp algorithm to choose (by calculating the D stat from the Clumpp manual).
+
+
+Ex.
+
+python3.7 clumpp_input_maker.py -in test/run*/2*qopt -type ngsadmix -out test/forClumpp
+
+## produces test/forClumpp_clumpp.param & test/forClumpp_clumpp.in
+
+"""
+
+
+def get_cmdline_args():
+	import argparse
+	parser = argparse.ArgumentParser()
+	parser.add_argument("-in", dest='input_files', nargs = '+',
+						help = "pattern for input file name. Something unique"
+						"to grab all names. should be able to search through"
+						"all subdirectories holding the replicates (run_1/,"
+						"run_2/, etc.): E.g., pattern: run*/2_*qopt ",
+						required = True
+						)
+	parser.add_argument("-type", "--cluster_type",
+						help = "was this and 'ngsadmix' or 'structure' run?",
+						required = True
+						)
+	# parser.add_argument("-param", "--write_clumpp_param", help = "write a parameter file of this name for clumpp based on recommendations here.")
+	parser.add_argument("-out", "--base_output_name",
+						help = "base name to add to the output files for"
+						 "clumpp"
+						 )
+	args = parser.parse_args()
+	return(args)
+
+def read_input(name):
+	"""
+	take a file name, read it in.
+	return - list of lines
+	"""
+	input = list()
+	IN = open(name)
+	for line in IN.readlines():
+		input.append(line)
+	return(input)
+
+
+def collect_input_data(files, filetype):
+	"""
+	read in the input files and collect the data
+	"""
+	data = list()
+	for n in files:
+		data.append(read_input(n))
+
+	return(data, len(files))
+
+def get_num_individuals(data):
+	"""
+	determines the number of individuals in the analysis
+	"""
+	return(len(data[0]))
+
+def get_k(data):
+	"""
+	determines the number of clusters
+	"""
+	indv1 = data[0][0]
+	indv1 = indv1.strip().split()# "\t"
+	return(len(indv1)) ## THIS ASSUMES IT IS ONLY CLUSTER ASSIGNMENT DATA HERE
+
+def compute_D(C, K, R, N = 1000):
+	"""
+	C: # individuals,
+	K: # clusters,
+	R: # replicates,
+	N: number of replicates to test
+	"""
+	from math import factorial
+
+	try: # b/c some values, the factorial will be too large for python to handle
+		T_fullsearch = (factorial(K) ** (R-1)) * (R * (R-1)/2) * K * C # make sure this math works
+		D_fullsearch = T_fullsearch * C * 1
+
+		T_greedy = (factorial(K)) * (R * (R-1)/2) * K * C
+		D_greedy = T_greedy * C * N
+	except:
+		return(3)
+
+	# T_largeK = (R * (R − 1)/2) * (K ** 2) * C
+
+	if D_fullsearch <= 10 ** 13:
+		print("\n use fullsearch, M = 1")
+		return(1)
+	elif D_greedy <= 10 ** 13:
+		print("\n use Greedy, M = 2, ideally a greedy_option = 1 would be set, but that may be too slow (all possible orders tested), greedy_option = 2 could be used with high R (e.g., 1000). But if K gets large, may need greedy_option = 3 and high R (e.g., 1000).")
+		return(2)
+	else:
+		print("\n use largeKGreedy, M = 3, again, ideally greedy_option 1, but most likely it will be 2 or 3. Use large R for 2 or 3.")
+		return(3)
+
+def print_clumpp_input(data, basename = 'forClumpp', type = 'ngsadmix'):
+	"""
+	make input data file for clumpp
+	"""
+	import re
+	outfile = basename + "_clumpp.in"
+
+	## need to add the starting 5 columns to this including an individual identifier, which will not exist for NGSADMIX.
+	with open(outfile, 'w') as out_fh:
+		for set in data:
+			# for indv in set:
+			for i in range(1, len(set)+1):
+				if re.search("ngsadmix", type, re.I):
+					# create set of indvidual IDs and other expected columns
+					line = [str(i), i, "(0)", 99, ":"]
+					for l in line:
+						out_fh.write("{}\t".format(l))
+					out_fh.write("{}".format(set[i-1]))
+					# print(set[i-1], end = '')
+				else:
+					print(indv, end = '')
+					out_fh.write("{}".format(set[i-1]))
+			out_fh.write("\n")
+
+
+def print_param_file(C, K, R, M, basename):
+	"""
+	prints the parameter file for clumpp
+	"""
+	print("\nSetting GREEDY_OPTION 2, and testing 1000 repeats of input order. Unless M = 1, in which case these will be ignored.\n")
+
+	param_outf = basename + "_clumpp.param"
+	header = ["DATATYPE\t0","INDFILE\t" + basename + "_clumpp.in",
+				"POPFILE\tnotneeded.popfile","OUTFILE\t" + basename + "_clumpp.out",
+				"MISCFILE\tnotneeded.miscfile", "K\t" + str(K), "C\t" + str(C) , "R\t" + str(R),
+				"M\t" + str(M), "W\t0", "S\t2", "GREEDY_OPTION\t2", "REPEATS\t1000","PERMUTATIONFILE\tNOTNEEDED.permutationfile",
+				"PRINT_PERMUTED_DATA\t0",
+				"PERMUTED_DATAFILE\tk4.perm_datafile",
+				"PRINT_EVERY_PERM\t0\t",
+				"EVERY_PERMFILE\tnotneeded.every_permfile",
+				"PRINT_RANDOM_INPUTORDER\t0",
+				"RANDOM_INPUTORDERFILE\tk4.random_inputorderfile",
+				"OVERRIDE_WARNINGS\t0",
+				"ORDER_BY_RUN\t0"]
+	with open(param_outf, 'w') as out_fh:
+		for l in header:
+			out_fh.write("{}\n".format(l))
+
+# DATATYPE 0
+# INDFILE k2_forClumpp
+# POPFILE notneede.popfile
+# OUTFILE k2.outfile
+# MISCFILE NOTNEEDED.miscfile
+# K 2
+# C 69
+# R 15
+# M 2
+# W 0
+# S 2
+# GREEDY_OPTION 2
+# REPEATS 1000
+# "PERMUTATIONFILE\tNOTNEEDED.permutationfile",
+# "PRINT_PERMUTED_DATA\t0",
+# "PERMUTED_DATAFILE\tk4.perm_datafile",
+# "PRINT_EVERY_PERM\t0\t",
+# "EVERY_PERMFILE\tnotneeded.every_permfile",
+# "PRINT_RANDOM_INPUTORDER\t0",
+# "RANDOM_INPUTORDERFILE\tk4.random_inputorderfile",
+# "OVERRIDE_WARNINGS\t0",
+# "ORDER_BY_RUN\t0"
+
+
+
+
+
+def main():
+	import re
+
+
+	args = get_cmdline_args()
+
+	if not re.search("ngsadmix", args.cluster_type, re.I):
+		exit("\n\nonly for ngsadmix data right now. Assumes the input cluster files only have cluster assignment on each line, no other information (Q-files).\n\n")
+
+	cluster_data, R = collect_input_data(args.input_files, args.cluster_type)
+
+	C = get_num_individuals(cluster_data)
+
+	K = get_k(cluster_data)
+
+	if re.search("ngsadmix", args.cluster_type, re.I):
+		print_clumpp_input(
+							cluster_data,
+							args.base_output_name,
+							args.cluster_type
+							)
+
+	M = compute_D(C, K, R) ## not actually doing anything about this. add that.
+
+	print_param_file(C, K, R, M, args.base_output_name)
+
+if __name__ == '__main__':
+	main()
+ ```
+Then,
+
+In pop_structure folder
+Install CLUMPP
+```bash
+mkdir CLUMPP
+cd CLUMPP
+wget https://rosenberglab.stanford.edu/software/CLUMPP_Linux64.1.1.2.tar.gz
+
+gunzip CLUMPP_Linux64.1.1.2.tar.gz
+
+tar xvf CLUMPP_Linux64.1.1.2.tar
+```
+
 In pop structure folder,
+Install NGSadmix
 ```bash
 mkdir ngsadmix
 cd ngsadmix
 wget https://raw.githubusercontent.com/ANGSD/angsd/master/misc/ngsadmix32.cpp
 g++ ngsadmix32.cpp -O3 -lpthread -lz -o NGSadmix
 ```
-Run this in /angsd_outputs/l_only to get ngsadmix outputs and collect them in a seperate folder
+Run this in /angsd_outputs/l_only to get multiple runs of ngsadmix outputs , create clumpp inputs, 
 
 ```bash
-mkdir ../../ngsadmix_outputs
+#mkdir ../../ngsadmix_outputs
+
 for i in ../*; do 
 cd ${i}
-../../ngsadmix/NGSadmix -likes *_angsd_output.beagle.gz -K 3 -minMaf 0.05 -seed 1 -o ${i##../}_ngsadmix_output
-mkdir ../../ngsadmix_outputs/${i##../}
-cp *_ngsadmix_output* ../../ngsadmix_outputs/${i##../}; done
+for run in `seq 10`;   do   mkdir run_$run ; cd run_$run/;   for K in `seq 5`;     do ../../../ngsadmix/NGSadmix -likes ../*.beagle.gz -K $K -P 10 -o $K\_outfiles -minMaf 0.05;   done;   cd ../ ; done
+cp /scratch/premacht/laevis_GBS_2020/saved_scripts_to_be_used/clumpp_input_maker_new.py .
+for k in `seq 5` ; do python3 clumpp_input_maker_new.py -in run_*/${k}_*qopt -type ngsadmix -out k$k ; done
+for f in k*param ; do ../../CLUMPP/CLUMPP_Linux64.1.1.2/CLUMPP $f; done ; done
+
+
+
+# mkdir ../../ngsadmix_outputs/${i##../}
+# cp *_ngsadmix_output* ../../ngsadmix_outputs/${i##../}; done
 ```
 
 
