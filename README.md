@@ -755,7 +755,7 @@ g++ ngsadmix32.cpp -O3 -lpthread -lz -o NGSadmix
 Run this in /angsd_outputs/l_only to get multiple runs of ngsadmix outputs , create clumpp inputs, 
 
 ```bash
-#mkdir ../../ngsadmix_outputs
+
 
 for i in ../*; do 
 cd ${i}
@@ -764,11 +764,54 @@ cp /scratch/premacht/laevis_GBS_2020/saved_scripts_to_be_used/clumpp_input_maker
 for k in `seq 5` ; do python3 clumpp_input_maker_new.py -in run_*/${k}_*qopt -type ngsadmix -out k$k ; done
 for f in k*param ; do ../../CLUMPP/CLUMPP_Linux64.1.1.2/CLUMPP $f; done ; done
 
-
-
-# mkdir ../../ngsadmix_outputs/${i##../}
-# cp *_ngsadmix_output* ../../ngsadmix_outputs/${i##../}; done
 ```
+
+Run this in the pop_structure folder to collect all the needed files to be downloaded
+
+```bash
+find angsd_outputs/*/run_* -name '*' | cpio -pdm all_final_outputs_for_R/
+find angsd_outputs/*/k* -name '*' | cpio -pdm all_final_outputs_for_R/
+mkdir all_final_outputs_for_R/angsd_outputs/file_lists
+cp finalized_bam_files/*file_list all_final_outputs_for_R/angsd_outputs/file_lists/
+```
+
+Run this in all_final_outputs_for_R/l_only to arrange clumpp outputs, runs and file lists
+```bash
+for j in ../l_only  ../s_only  ../whole_genome ; 
+do cd ${j}  
+mkdir runs
+mv -f run* runs/
+mkdir clumpp_files
+mv k* clumpp_files
+mv ../file_lists/*${j##../}* . ; done
+rmdir ../file_lists/
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
