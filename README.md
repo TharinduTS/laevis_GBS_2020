@@ -786,7 +786,13 @@ mv k* clumpp_files
 mv ../file_lists/*${j##../}* . ; done
 rmdir ../file_lists/
 ```
+Then you can download all the needed files for R with a single command from desktop
 
+```bash
+scp -r premacht@graham.computecanada.ca:/scratch/premacht/laevis_GBS_2020/testing_ground/pop_structure/all_final_outputs_for_R/angsd_outputs ./laevis_GBS_2020/
+```
+
+========>>>>> REST CONTINUES IN THE DESKTOP MACHINE ===========>>>>>>>
 
 
 
