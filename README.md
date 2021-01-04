@@ -528,6 +528,17 @@ cd ngsadmix
 wget https://raw.githubusercontent.com/ANGSD/angsd/master/misc/ngsadmix32.cpp
 g++ ngsadmix32.cpp -O3 -lpthread -lz -o NGSadmix
 ```
+Run this in /angsd_outputs/l_only to get ngsadmix outputs and collect them in a seperate folder
+
+```bash
+mkdir ../../ngsadmix_outputs
+for i in ../*; do 
+cd ${i}
+../../ngsadmix/NGSadmix -likes *_angsd_output.beagle.gz -K 3 -minMaf 0.05 -seed 1 -o ${i##../}_ngsadmix_output
+mkdir ../../ngsadmix_outputs/${i##../}
+cp *_ngsadmix_output* ../../ngsadmix_outputs/${i##../}; done
+```
+
 
 
 # =========>>>>>  FOR ABBABABA ============>>>>
