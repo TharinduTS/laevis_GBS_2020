@@ -792,8 +792,420 @@ Then you can download all the needed files for R with a single command from desk
 scp -r premacht@graham.computecanada.ca:/scratch/premacht/laevis_GBS_2020/testing_ground/pop_structure/all_final_outputs_for_R/angsd_outputs ./laevis_GBS_2020/
 ```
 
-========>>>>> REST CONTINUES IN THE DESKTOP MACHINE ===========>>>>>>>
+# ========>>>>> CONTINUES IN THE DESKTOP MACHINE ===========>>>>>>>
 
+after the files are downloaded,
+
+copy mobile pack folder into the directory where we have
+```
+1. clumpp_files folder
+2. runs folder
+3. downloaded file list
+```
+mobile pack folder has 3 Rscripts
+
+# 1. get_a_file_for_location_info.r
+
+Run this and it will create a directory called locality info and a file named full_summary inside it
+
+```r
+# This outputs a file to enter locations for samples
+
+# set wd to the place where file is
+library("rstudioapi") 
+setwd(dirname(getActiveDocumentContext()$path)) 
+
+# get the name of the file list file name
+list_of_files<-list.files(path = './..',pattern = 'file_list' )
+# read list_of_files
+sample_address_list<-readLines(paste("./../",list_of_files,sep =""))
+
+# extract file names
+sample_list<-basename(sample_address_list)
+
+
+# make an empty dataframe for sample info and add file list
+
+sample_info<-setNames(data.frame(matrix(ncol = 5, nrow = length(sample_list))), c("IND","ID","LOCATION","SPECIES","FILE"))
+sample_info[,5]<-sample_list
+
+# Fill IND automatically
+sample_info[,1]<-paste("IND",seq.int(nrow(sample_info)),sep = "")
+
+# Give default IDs(just bumbers to be edited later)
+sample_info[,2]<-paste(seq.int(nrow(sample_info)),"enter_real_ID_here",sep = "_")
+
+# Default value for locations
+sample_info[,3]<-paste(seq.int(nrow(sample_info)),"enter_location_here",sep = "_")
+
+# Default value for species
+sample_info[,4]<-"enter_species_here"
+
+# make a directory for location info
+dir.create(path = './locality_info')
+write.table(sample_info,"./locality_info/full_summary.txt",sep="\t",row.names=FALSE,quote = FALSE)
+```
+
+*Open the created file and edit the essential data in it.(by default this script assumes all the samples are from the same species but different populations)
+*Then save it without changing file name or format
+
+then run the second file inside mobile pack
+
+# 2. make lnlk
+
+```r
+
+# This outputs a file to enter locations for samples
+
+# set wd to the place where file is
+library("rstudioapi") 
+setwd(dirname(getActiveDocumentContext()$path)) 
+
+# get the name of the file list file name
+list_of_files<-list.files(path = './..',pattern = 'file_list' )
+# read list_of_files
+sample_address_list<-readLines(paste("./../",list_of_files,sep =""))
+
+# extract file names
+sample_list<-basename(sample_address_list)
+
+
+# make an empty dataframe for sample info and add file list
+
+sample_info<-setNames(data.frame(matrix(ncol = 5, nrow = length(sample_list))), c("IND","ID","LOCATION","SPECIES","FILE"))
+sample_info[,5]<-sample_list
+
+# Fill IND automatically
+sample_info[,1]<-paste("IND",seq.int(nrow(sample_info)),sep = "")
+
+# Give default IDs(just bumbers to be edited later)
+sample_info[,2]<-paste(seq.int(nrow(sample_info)),"enter_real_ID_here",sep = "_")
+
+# Default value for locations
+sample_info[,3]<-paste(seq.int(nrow(sample_info)),"enter_location_here",sep = "_")
+
+# Default value for species
+sample_info[,4]<-"enter_species_here"
+
+# make a directory for location info
+dir.create(path = './locality_info')
+write.table(sample_info,"./locality_info/full_summary.txt",sep="\t",row.names=FALSE,quote = FALSE)
+```
+This creates the files bam_names_list and lnlks_allRuns
+
+Then we can run the third script to plot all data
+
+# 3. plot_nsgadmix
+
+```r
+######
+# plot Ks and lnlks
+######
+
+#set current path as wd
+library("rstudioapi") 
+setwd(dirname(getActiveDocumentContext()$path))
+#import all locations to sort
+#****************************#
+# you can observe sort list from here and might have to paste output for levels below
+
+library(tidyverse)
+require("readxl")
+library("readxl")
+library(dplyr)
+library(cowplot)
+library(ggplot2)
+
+full_table<-read_tsv("./locality_info/full_summary.txt")
+location_list<-(distinct(full_table[3]))
+
+#************************#
+#used desc to take vic to top
+sort_list<-arrange(.data = location_list,desc(LOCATION)) %>%toString %>% noquote
+cat(sort_list)
+#************************#
+
+## ---- Functions -----
+get_k <- function(file, k_pos = 1) {
+  basename(file) %>% str_split('[_*]|K') %>%
+    unlist() %>% pluck(k_pos)
+}
+
+import_names_file <- function(file){
+  ids <- read_tsv(file, col_names = T)
+  names(ids) <- c("indv","location","ID","species")
+  ids
+}
+
+import_clumpp <- function(file, ids) {
+  # need file of names in the name order as the bams, which should be same
+  # as the clumpp order.
+  clust <- read_table(file, col_names = F)
+  clust <- read_table(file, col_names = F) %>%
+    mutate(k = paste('K', ncol(clust[,c(6:ncol(clust))]), sep = ''))
+  
+  clust <- bind_cols(clust, ids)
+  
+  
+  ##======>>>YOU CAN COLLECT LOCATION LIST HERE AND ARRANGE IN THE FOLLOWING LINE =====>>>
+  
+  automated_list<-c(location_list)
+ 
+  
+  clust %>%
+    
+    gather(key = 'clust', value = 'prop', -c(X1, X2,X3,X4,X5, k, indv, location, ID,species)) %>%
+    mutate(location = factor(location,
+                             
+                             # use default order for location order like this
+                             
+                             levels = unlist(automated_list, use.names=FALSE),
+                             
+                             #Or extract the location list by running 'levels' above and change oreder here
+                             #levels = c( "1_enter_location_here", "2_enter_location_here"),
+                             
+                             #====and==>>
+                             
+                             #use numbers instead location names
+                             labels = 1:nrow(location_list)
+                             
+                             # or use real names
+                             #labels = unlist(automated_list, use.names=FALSE)
+    )
+    )
+  
+}
+
+##========================================================>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+#without labs
+plot_k_wtout_labs <- function(clumpp) {
+  ggplot(clumpp, aes(x = indv, y = prop, fill = clust)) +
+    geom_col(width = 1) +
+    facet_grid( ~ location+species, switch = "x"
+                , scales = "free_x"
+                , space = 'free') +
+    theme_bw() +
+    theme(
+      legend.position = 'none',
+      panel.background = element_blank(),
+      panel.grid = element_blank(),
+      panel.border = element_blank(),
+      strip.background.x = element_blank(),
+      
+      #uncomment following if you want file names
+      #axis.text.x = element_text(angle = 90),
+      
+      
+      axis.text.x  = element_blank(),
+      
+      #Change label size and angle here/ set this to 0 to remove labels from first 3 plots to reduce conflicts
+      strip.text.x = element_text(size = 0),
+      
+      axis.ticks.x = element_blank(),
+      axis.title = element_text(size = 20),
+      axis.text = element_text(size = 16),
+      # remove individual x labelling for all plots
+      # strip.text.x = element_blank()
+    ) +
+    # scale_fill_brewer(type = "qual",palette = "Paired") +
+    scale_fill_manual(
+      values =get(paste("pal",i,sep = "",collapse = NULL)),
+      limits = names(pal)
+    )+
+    xlab("") +
+    scale_y_continuous(breaks = c(0, 0.5, 1.0))
+  
+}
+
+## --- end of functions
+
+
+## -- Handle lnlk
+lnlks <- read_tsv('lnlks_allRuns.txt', col_names = T)
+names(lnlks) <- c("rep","k",'lnlk')
+
+quants <-lnlks %>%
+  group_by(k) %>%
+  summarise(med = median(lnlk),
+            upper = quantile(lnlk, 0.975),
+            lower = quantile(lnlk, 0.025)
+  )
+
+
+
+#final plot with labs
+plot_k_wt_labs <- function(clumpp) {
+  ggplot(clumpp, aes(x = indv, y = prop, fill = clust)) +
+    geom_col(width = 1) +
+    facet_grid( ~ location+species, switch = "x"
+                , scales = "free_x"
+                , space = 'free') +
+    theme_bw() +
+    theme(
+      legend.position = 'none',
+      panel.background = element_blank(),
+      panel.grid = element_blank(),
+      panel.border = element_blank(),
+      strip.background.x = element_blank(),
+      
+      #uncomment following if you want file names
+      #axis.text.x = element_text(angle = 90),
+      
+      
+      axis.text.x  = element_blank(),
+      
+      # **** Change label size and angle here ****
+      strip.text.x = element_text(size = 40, face = "italic"),
+      
+      #axis.ticks.x = element_blank(),
+      axis.title = element_text(size = 20),
+      axis.text = element_text(size = 16),
+      #remove individual x labelling for all plots
+      #strip.text.x = element_blank()
+    ) +
+    # scale_fill_brewer(type = "qual",palette = "Paired") +
+    scale_fill_manual(
+      values = pal,
+      limits = names(pal)
+    )+
+    xlab("") +
+    scale_y_continuous(breaks = c(0, 0.5, 1.0))
+  
+}
+
+## --- end of functions
+
+
+## -- Handle lnlk
+lnlks <- read_tsv('lnlks_allRuns.txt', col_names = T)
+names(lnlks) <- c("rep","k",'lnlk')
+
+quants <-lnlks %>%
+  group_by(k) %>%
+  summarise(med = median(lnlk),
+            upper = quantile(lnlk, 0.975),
+            lower = quantile(lnlk, 0.025)
+  )
+
+
+lnlk_multi_plot <-
+  ggplot(filter(quants, k < 6), aes(x = k, y = med, group = k)) +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0, size = 1) +
+  geom_point(size = 5)  +
+  theme_classic() +
+  theme(
+    axis.title = element_text(size = 20),
+    axis.text = element_text(size = 16)
+  ) +
+  xlab(expression(paste("Number of Clusters (", italic("K"),")"))) +
+  ylab(expression(italic(log-likelihood)))
+
+
+## -- handle cluster plots
+
+sample_names <- import_names_file("bam_names.txt")
+## In the same order as samples were given to NgsAdmix (list of bams order)
+## E.g., (tab seperated)
+# AMNH17273_Xt_SierL_male	sierra_leone	AMNH17273
+# XEN091_Xt_SierL_female	sierra_leone	XEN091
+# XEN092_Xt_SierL_female	sierra_leone	XEN092
+# XEN094_Xt_SierL_male	sierra_leone	XEN094
+
+
+c_files <- list.files("./../clumpp_files/", "out", full.names = T) %>%
+  set_names(., map(., get_k))
+# A directory that contains files named: k4_clumpp.out, k5_clumpp.out, etc
+
+clumpp_dats <- map(c_files, import_clumpp, ids = sample_names)
+
+#set colors manually
+#assign colour set
+left_corner<-"darkblue"
+right_corner<-"lightblue"
+left_middle<-"forestgreen"
+right_middle<-"pink"
+upper_little<-"purple"
+
+pal1 <- c(
+  "X6" = right_corner,
+  "X7" = left_corner, 
+  "X8" = right_middle, 
+  "X9" = left_middle,
+  "X10"= upper_little
+)
+
+pal2 <- c(
+  "X6" = right_corner,
+  "X7" = left_corner, 
+  "X8" = right_middle, 
+  "X9" = left_middle,
+  "X10"= upper_little
+)
+
+pal3 <- c(
+  "X6" = right_middle,
+  "X7" = right_corner, 
+  "X8" = left_middle, 
+  "X9" = left_corner,
+  "X10"= upper_little
+)
+
+pal4 <- c(
+  "X6" = right_middle,
+  "X7" = right_corner, 
+  "X8" = left_middle, 
+  "X9" = left_corner,
+  "X10"= upper_little
+)
+
+pal <- c(
+  "X6" = left_corner,
+  "X7" = right_corner, 
+  "X8" = upper_little, 
+  "X9" = right_middle,
+  "X10"= left_middle
+)
+plot_name_list<-1:4
+for (i in 1:3) {
+  plot_name_list[i] <- map(clumpp_dats[i],plot_k_wtout_labs)
+  i<-i+1
+}
+
+#k_plots <- map(clumpp_dats[1:3], plot_k_wtout_labs)
+
+#last plot with labels
+plot_name_list[4] <- map(clumpp_dats[4], plot_k_wt_labs)
+
+library(gridExtra)
+multi_k_plots<-grid.arrange(
+  grobs = plot_name_list,
+  ncol=1
+  
+  #widths = c(2, 2),
+  #heights=c(2,1)
+)
+
+
+
+# Create a folder for outputs
+dir.create(path = "./../final_plots")
+
+ggsave("./../final_plots/K2-5_ngsadmix.pdf", multi_k_plots,width = 30, height = 20)
+
+
+## -- combine lnlk and cluster plots
+join_plots <-
+  cowplot::plot_grid(multi_k_plots, lnlk_multi_plot,
+                     labels = "AUTO", ncol = 2
+  )
+xx<-ggdraw(add_sub(join_plots, "Label", vpadding=grid::unit(0,"lines"),y=6, x=0.5, vjust=4.5))
+
+
+ggsave("./../final_plots/k_lnlk_and_admix_plots.pdf", join_plots,
+       useDingbats=FALSE, width = 30, height = 20)
+
+```
+This will create all the finalized plots and they can be found in a newly created directory called final_plots in the parent directory
 
 
 
