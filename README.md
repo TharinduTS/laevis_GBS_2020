@@ -855,8 +855,6 @@ then run the second file inside mobile pack
 
 ```r
 
-# This outputs a file to enter locations for samples
-
 # set wd to the place where file is
 library("rstudioapi") 
 setwd(dirname(getActiveDocumentContext()$path)) 
