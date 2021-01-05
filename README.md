@@ -1203,10 +1203,12 @@ ggsave("./../final_plots/k_lnlk_and_admix_plots.pdf", join_plots,
        useDingbats=FALSE, width = 30, height = 20)
 
 ```
-This will create all the finalized plots and they can be found in a newly created directory called final_plots in the parent directory
+# ===>>> This will create all the finalized plots and they can be found in a newly created directory called final_plots in the parent directory
+
+# Do same with all the directories you have for different genomes
 
 
-
+#************************************************************************************************************************************************************* END OF POPULATION STRUCTURE ANALYSIS ************************************************************************************
 
 
 
