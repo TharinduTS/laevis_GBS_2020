@@ -180,17 +180,9 @@ for j in  ../l_only ../s_only ../whole_genome; do cd ${j}
 
 # Filtering based on per site coverage
 
-```bash
-module load nixpkgs/16.09
-module load gatk/4.1.2.0
-```
-you may have to type “yes” here to access GATK
-Index reference genome (Use this if it has not been done already)
-```bash
-module load bwa
-module load samtools/1.10
-samtools faidx XENLA_9.2_genome.fa
-```
+in the reference genome folder,
+
+
 create GATk dictionary file for reference genome
 ```bsh
 module load nixpkgs/16.09
@@ -200,6 +192,9 @@ gatk --java-options "-Xmx2G" CreateSequenceDictionary -R   XENLA_9.2_genome.fa
  Create depth table using GATK for all genomes(in /filtered_VCFs/vcf_l_only)
  
  ** You will not be able to get enough memory for java(like -Xmx16G) if you use bash to run script(max is 1/4 th of the physical memory you ask for). Therefore to test, submit job like this and keep checking .err file **
+ 
+ In filtered_VCfs folder,
+ 
  ```bash
 #!/bin/sh
 #SBATCH --job-name=bwa_505
