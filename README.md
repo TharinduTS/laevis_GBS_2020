@@ -193,7 +193,7 @@ gatk --java-options "-Xmx2G" CreateSequenceDictionary -R   XENLA_9.2_genome.fa
  
  ** You will not be able to get enough memory for java(like -Xmx16G) if you use bash to run script(max is 1/4 th of the physical memory you ask for). Therefore to test, submit job like this and keep checking .err file **
  
- In filtered_VCfs folder,
+ In filtered_VCFs/vcf_l_only folder,
  
  ```bash
 #!/bin/sh
