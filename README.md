@@ -174,7 +174,7 @@ mkdir ../../finalized_bam_files
 ```bash
 for j in  ../l_only ../s_only ../whole_genome; do cd ${j}
         mkdir ../../finalized_bam_files/finalized_bams_${j#../}
-        mv ./*final_${j#../}.bam* ../../finalized_bam_files/finalized_bams_${j#../} ; done
+        cp ./*final_${j#../}.bam* ../../finalized_bam_files/finalized_bams_${j#../} ; done
 ```
 # ====>> You can start population structure analysis with these data(finalized bams from the step above) as described after Fst =======>>>>>
 
