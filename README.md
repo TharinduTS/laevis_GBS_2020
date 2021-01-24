@@ -96,7 +96,7 @@ samtools faidx ../reference_genome/XENLA_9.2_genome.fa
 ```
 # sort and index bams again, create vcfs for all subgenomes, remove scaffolds and labels from header of the vcfs and store them in seperate folders created for them (These files will be ready to use for analysis)
 
-** Processing all files this way might take lot of time. In that case, modify the outer for loop and use this script to submit jobs parallely for seperate genomes(leaving just one genome as j at a time)
+# ** Processing all files this way might take lot of time. In that case, modify the outer for loop and use this script to submit jobs parallely for seperate genomes(leaving just one genome as j at a time) * Remember to give the whole genome more time and memory when you do this***
 
 Run in filtered_bam_files/l_only
 
