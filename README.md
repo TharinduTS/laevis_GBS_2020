@@ -761,7 +761,7 @@ if __name__ == '__main__':
 Then,
 
 In pop_structure folder
-Install CLUMPP
+Install CLUMPP and NGSadmix
 ```bash
 mkdir CLUMPP
 cd CLUMPP
@@ -770,15 +770,15 @@ wget https://rosenberglab.stanford.edu/software/CLUMPP_Linux64.1.1.2.tar.gz
 gunzip CLUMPP_Linux64.1.1.2.tar.gz
 
 tar xvf CLUMPP_Linux64.1.1.2.tar
-```
 
-In pop structure folder,
-Install NGSadmix
-```bash
+cd ../
+
 mkdir ngsadmix
 cd ngsadmix
 wget https://raw.githubusercontent.com/ANGSD/angsd/master/misc/ngsadmix32.cpp
 g++ ngsadmix32.cpp -O3 -lpthread -lz -o NGSadmix
+cd ../
+ls
 ```
 Run this in /angsd_outputs/l_only to get multiple runs of ngsadmix outputs , create clumpp inputs, 
 
