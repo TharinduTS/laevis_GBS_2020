@@ -493,26 +493,59 @@ First copy only the bam files to a new directory
 in the directory with the finalized_bam_files folder from above,
 
 ```bash
+#!/bin/sh
+#SBATCH --job-name=bwa_505
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --time=2:00:00
+#SBATCH --mem=100gb
+#SBATCH --output=bwa505.%J.out
+#SBATCH --error=bwa505.%J.err
+#SBATCH --account=def-ben
+
+#SBATCH --mail-user=premacht@mcmaster.ca
+#SBATCH --mail-type=BEGIN
+#SBATCH --mail-type=END
+#SBATCH --mail-type=FAIL
+#SBATCH --mail-type=REQUEUE
+#SBATCH --mail-type=ALL
+
 find ./finalized_bam_files/ -name '*.bam' | cpio -pdm  pop_structure/
+
 ```
 
 Then *in the pop_structure folder* run the following.
 This will,
-load ANGSD, Set paths to the programs and the data(use the corresponding directories), 
+load ANGSD, Set paths to the programs and the data(use the corresponding directories) and get angsd outputs for all genomes and collect them in corresponding folders
 ```
+#!/bin/sh
+#SBATCH --job-name=bwa_505
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --time=12:00:00
+#SBATCH --mem=32gb
+#SBATCH --output=bwa505.%J.out
+#SBATCH --error=bwa505.%J.err
+#SBATCH --account=def-ben
+
+#SBATCH --mail-user=premacht@mcmaster.ca
+#SBATCH --mail-type=BEGIN
+#SBATCH --mail-type=END
+#SBATCH --mail-type=FAIL
+#SBATCH --mail-type=REQUEUE
+#SBATCH --mail-type=ALL
+
 module load nixpkgs/16.09
 module load intel/2018.3
 module load angsd/0.929
 
 AA=/scratch/premacht/xlaevis_and_xgilli/ANGSD
-```
-Run ollowing in the pop_structure folder to get angsd outputs for all genomes and collect them in corresponding folders
-```bash
-for j in finalized_bam_files/*; do find ${j} | grep bam$ > ${j}_file_list 
-angsd -bam ${j}_file_list -GL 2 -doMajorMinor 1 -doMaf 1 -SNP_pval 2e-6 -minMapQ 20 -minQ 20 -doCounts 1 -doDepth 1 -setMinDepth 2 -setMaxDepth 100  -minInd 1 -minMaf 0.05 -doGlf 2 -out ${j}_angsd_output -p 1; done
 
-mkdir angsd_outputs
-for i in l_only s_only whole_genome; do mkdir angsd_outputs/${i}; mv finalized_bam_files/*${i}_angsd_output* angsd_outputs/${i} ; done
+for j in finalized_bam_files/*; do find ${j} | grep bam$ > ${j}_file_list
+        angsd -bam ${j}_file_list -GL 2 -doMajorMinor 1 -doMaf 1 -SNP_pval 2e-6 -minMapQ 20 -minQ 20 -doCounts 1 -doDepth 1 -setMinDepth 2 -setMaxDepth 100  -minInd 1 -minMaf 0.05 -doGlf 2 -out ${j}_angsd_output -p 1; done
+
+        mkdir angsd_outputs
+        for i in l_only s_only whole_genome; do mkdir angsd_outputs/${i}; mv finalized_bam_files/*${i}_angsd_output* angsd_outputs/${i} ; done
 ```
 # Download and install NGSadmix 
 
