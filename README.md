@@ -790,7 +790,7 @@ cd ${i}
 for run in `seq 10`;   do   mkdir run_$run ; cd run_$run/;   for K in `seq 5`;     do ../../../ngsadmix/NGSadmix -likes ../*.beagle.gz -K $K -P 10 -o $K\_outfiles -minMaf 0.05;   done;   cd ../ ; done
 cp /scratch/premacht/laevis_GBS_2020/saved_scripts_to_be_used/clumpp_input_maker_new.py .
 for k in `seq 5` ; do python3 clumpp_input_maker_new.py -in run_*/${k}_*qopt -type ngsadmix -out k$k ; done
-for f in k*param ; do ../../CLUMPP/CLUMPP_Linux64.1.1.2/CLUMPP $f; done ; done
+for f in k*param ; do ../../CLUMPP/CLUMPP_Linux64.1.1.2/CLUMPP $f; done & done
 
 ```
 
