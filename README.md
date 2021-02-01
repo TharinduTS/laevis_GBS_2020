@@ -37,7 +37,7 @@ for i in *.bam; do
 
 # This part selects only chrs and saves an inbetween file
 
-samtools view -b ${i} chr1S chr2L chr2S chr3L chr3S chr4L chr4S chr5L chr5S chr6L chr6S chr7L chr7S chr8L chr8S chr9_10L chr9_10S > inbetween.bam
+samtools view -b ${i} chr1L chr1S chr2L chr2S chr3L chr3S chr4L chr4S chr5L chr5S chr6L chr6S chr7L chr7S chr8L chr8S chr9_10L chr9_10S > inbetween.bam
 
 #index inbetween bam
 samtools index inbetween.bam
