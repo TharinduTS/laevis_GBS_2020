@@ -159,7 +159,7 @@ vcftools --gzvcf laevis_GBS_2020_${j#../}.vcf --keep all_sample_list --chr chr1L
 mkdir mkdir ../../filtered_VCFs/vcf_${j#../}
 
 #move vcf there
-mv laevis_GBS_2020_${j#../}* ../../filtered_VCFs/vcf_${j#../}/ ;done
+mv laevis_GBS_2020_${j#../}* ../../filtered_VCFs/vcf_${j#../}/ & done
 
 ```
 
