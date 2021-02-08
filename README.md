@@ -482,6 +482,35 @@ Then
 (explanations about the flags used can be found in the help link above)
 (you may include command "--writeFailedWindows" if you get an empty output file, it should always write something in the output file, even if all results are NA)
 
+**use this script to take population names and sample names to paste in the next command
+
+```r
+#set current path as wd
+library("rstudioapi") 
+setwd(dirname(getActiveDocumentContext()$path))
+
+pop_list<-read.table("./pop_file.txt")
+
+
+final_list_to_paste<-"paste following in the terminal:  "
+
+for (pop in unique(pop_list$V2)) {
+
+pop_1<-pop_list$V1[pop_list$V2==pop]
+
+sample_list<-noquote(toString(pop_1))
+
+full_cmd<-paste(" -p ",pop," ",sample_list,sep = "")
+
+final_list_for_this_pop<-gsub(", ",",",full_cmd)
+
+final_list_to_paste<-paste(final_list_to_paste,final_list_for_this_pop,sep = "")
+}
+
+print(final_list_to_paste)
+
+```
+
 ```bash
 python popgenWindows.py -w 50000 -m 50 -g laevis_GBS_2020_vcf_l_only_positions_excluded.geno -o output.csv.gz -f phased --popsFile pops.txt
 ```
