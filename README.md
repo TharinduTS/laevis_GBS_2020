@@ -1016,18 +1016,22 @@ import_clumpp <- function(file, ids) {
                              
                              # use default order for location order like this
                              
-                             levels = unlist(automated_list, use.names=FALSE),
+                             #levels = unlist(automated_list, use.names=FALSE),
                              
-                             #Or extract the location list by running 'levels' above and change oreder here
-                             #levels = c( "1_enter_location_here", "2_enter_location_here"),
+                             #==>Or extract the location list by running 'levels' above and change oreder here
+                             levels = c('GRNP', 'DeDorn', 'Vred','Citrus', 'BW', 'Laigns', 'Niewou','Kimber', 'Draken', 'no_lbl','Inhaca','VicW', 'ThreeS'),
                              
                              #====and==>>
                              
                              #use numbers instead location names
-                             labels = 1:nrow(location_list)
+                             #labels = 1:nrow(location_list)
                              
                              # or use real names
                              #labels = unlist(automated_list, use.names=FALSE)
+                             
+                             # ==> and labels for pre assigned levels if you changed it above
+                             
+                             labels = c('GRNP', 'DeDorn', 'Vred','Citrus', 'BW', 'Laigns', 'Niewou','Kimber', 'Draken', 'no_lbl','Inhaca','VicW', 'ThreeS')
     )
     )
   
@@ -1077,6 +1081,8 @@ plot_k_wtout_labs <- function(clumpp) {
 ## --- end of functions
 
 
+
+
 ## -- Handle lnlk
 lnlks <- read_tsv('lnlks_allRuns.txt', col_names = T)
 names(lnlks) <- c("rep","k",'lnlk')
@@ -1112,7 +1118,7 @@ plot_k_wt_labs <- function(clumpp) {
       axis.text.x  = element_blank(),
       
       # **** Change label size and angle here ****
-      strip.text.x = element_text(size = 40, face = "italic"),
+      strip.text.x = element_text(size = 20, face = "italic",angle = 60),
       
       #axis.ticks.x = element_blank(),
       axis.title = element_text(size = 20),
@@ -1184,49 +1190,88 @@ right_middle<-"pink"
 upper_little<-"purple"
 
 pal1 <- c(
-  "X6" = right_corner,
-  "X7" = left_corner, 
-  "X8" = right_middle, 
-  "X9" = left_middle,
-  "X10"= upper_little
+  "X6" = "lightblue",
+  "X7" = "darkblue", 
+  "X8" = "pink", 
+  "X9" = "forestgreen",
+  "X10"= "purple"
 )
 
 pal2 <- c(
-  "X6" = right_corner,
-  "X7" = left_corner, 
-  "X8" = right_middle, 
-  "X9" = left_middle,
-  "X10"= upper_little
+  "X6" = "pink",
+  "X7" = "lightblue", 
+  "X8" = "darkblue", 
+  "X9" = "forestgreen",
+  "X10"= "purple"
 )
 
 pal3 <- c(
-  "X6" = right_middle,
-  "X7" = right_corner, 
-  "X8" = left_middle, 
-  "X9" = left_corner,
-  "X10"= upper_little
+  "X6" = "lightblue",
+  "X7" = "darkblue", 
+  "X8" = "pink", 
+  "X9" = "forestgreen",
+  "X10"= "purple"
 )
 
 pal4 <- c(
-  "X6" = right_middle,
-  "X7" = right_corner, 
-  "X8" = left_middle, 
-  "X9" = left_corner,
-  "X10"= upper_little
+  "X6" = "purple",
+  "X7" = "darkblue", 
+  "X8" = "pink", 
+  "X9" = "forestgreen",
+  "X10"= "lightblue"
 )
 
 pal <- c(
-  "X6" = left_corner,
-  "X7" = right_corner, 
-  "X8" = upper_little, 
-  "X9" = right_middle,
-  "X10"= left_middle
+  "X6" = "pink",
+  "X7" = "lightblue", 
+  "X8" = "purple", 
+  "X9" = "forestgreen",
+  "X10"= "darkblue"
 )
+
+
+# ****change cluster order here*********#
+
+# first cluster change
+
+#change k here
+k<-"k4"
+
+#sort data in the end
+attach(clumpp_dats[[k]])
+
+#change the priority order of clusters here ** the cluster at on the right end gets plotted at the bottom compared to one in the left
+#( list the X value related to the color that should be in the top in the left most end of the following list)
+clumpp_dats[[k]][["clust"]] <- factor(clumpp_dats[[k]][["clust"]], levels = c("X10","X9", "X8","X6","X7"))
+
+clumpp_dats[[k]] <- clumpp_dats[[k]][order(clust),]
+
+# second cluster change
+
+#change k here
+k<-"k5"
+
+#sort data in the end
+attach(clumpp_dats[[k]])
+
+#change the priority order of clusters here ** the cluster at on the right end gets plotted at the bottom compared to one in the left
+#( list the X value related to the color that should be in the top in the left most end of the following list)
+clumpp_dats[[k]][["clust"]] <- factor(clumpp_dats[[k]][["clust"]], levels = c("X8","X9", "X6","X7","X10"))
+
+clumpp_dats[[k]] <- clumpp_dats[[k]][order(clust),]
+# ******************************************
 plot_name_list<-1:4
-for (i in 1:3) {
+for (i in 1:2) {
   plot_name_list[i] <- map(clumpp_dats[i],plot_k_wtout_labs)
   i<-i+1
 }
+
+
+
+
+#plots with manual orientation
+i<-3
+plot_name_list[i] <- map(clumpp_dats[i],plot_k_wtout_labs)
 
 #k_plots <- map(clumpp_dats[1:3], plot_k_wtout_labs)
 
@@ -1260,6 +1305,10 @@ xx<-ggdraw(add_sub(join_plots, "Label", vpadding=grid::unit(0,"lines"),y=6, x=0.
 
 ggsave("./../final_plots/k_lnlk_and_admix_plots.pdf", join_plots,
        useDingbats=FALSE, width = 30, height = 20)
+
+
+
+
 
 ```
 # ===>>> This will create all the finalized plots and they can be found in a newly created directory called final_plots in the parent directory
