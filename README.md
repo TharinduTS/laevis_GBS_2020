@@ -515,6 +515,659 @@ print(final_list_to_paste)
 python popgenWindows.py -w 50000 -m 50 -g laevis_GBS_2020_vcf_l_only_positions_excluded.geno -o output.csv.gz -f phased --popsFile pops.txt
 ```
 
+# ********* filter genes ********************
+
+Generate the needed gff files with data needed for filtering like following
+
+```curl
+curl http://ftp.xenbase.org/pub/Genomics/JGI/Xenla9.2/XENLA_9.2_Xenbase.gff3 > XLv9.2_xenbase_annotations.gff
+grep 'exon' XLv9.2_xenbase_annotations.gff | egrep -v 'mRNA' > XLv9.2_xenbase_annotations_exons_only.gff
+``` 
+Then filter the genes with the help of that file with the following script by running it as shown below
+
+Prints_Fst_blocks_with_genes.pl
+```perl
+#!/usr/bin/env perl
+use strict;
+use warnings;
+
+
+# This program reads in the output the the general genomics popgenWindows.py script
+# and then a gff file that has only the mRNA coordinates.
+# It then prints out lines from the general genomics file that have genes.
+
+
+
+# first concatenate FST data from all chrs like this:
+# ../Makes_inputfile_for_jackknife.pl prefix
+
+# download the xenbase file:
+# curl http://ftp.xenbase.org/pub/Genomics/JGI/Xenla9.2/XENLA_9.2_Xenbase.gff3 > XLv9.2_xenbase_annotations.gff
+
+# make a simplified gff file that has only the mRNA coordinates
+# grep 'mRNA' XLv9.2_xenbase_annotations.gff | egrep -v 'exon' > XLv9.2_xenbase_annotations_mRNA_only.gff
+
+# make the perl script executable:
+# chmod 755 Prints_Fst_blocks_with_genes.pl
+
+# then run this file like this (with four variables following the perl script):
+# ./Prints_Fst_blocks_with_genes.pl laevis_GBS_2020_l_only_positions_excluded_final_fst.csv XLv9.2_xenbase_annotations_mRNA_only.gff output_with_only_blocks_containing_genes.out 
+
+# laevis_GBS_2020_l_only_positions_excluded_final_fst.csv is the output file from the Fst analysis with results from all chromosomes concatenated and only one header in the file
+# XLv9.2_xenbase_annotations_mRNA_only.gff is the gff file with only mRNA coordinates
+# output_with_only_blocks_containing_genes.out is the output file with Fst results from only those blocks containing genes 
+
+
+my $windowsize=10000; # this is the size of the genomic window 
+
+
+my $inputfile = $ARGV[0]; # the name of the Fst input file is from the commandline
+unless (open DATAINPUT, $inputfile) {
+        print "Can not find the Fst input file.\n";
+        exit;
+}
+my @temp;
+my @temp1;
+my %fst;
+my @fst;
+my $firstline;
+
+# Read in the Fst file from general genomics and store each block in a 
+# hash with the key being the chr and start coordinates separated by an underscore
+while ( my $line = <DATAINPUT>) {
+        @temp=split(',',$line);
+        if($temp[0] ne 'scaffold'){
+                $fst{$temp[0]."_".$temp[1]}{"line"} = $line; # this line will be printed to the outfile if the next flag is equal to 1
+                $fst{$temp[0]."_".$temp[1]}{"chr"} = $temp[0]; # this is a flag that will be updated if we want to print this line
+                $fst{$temp[0]."_".$temp[1]}{"start"} = $temp[1]; # this is a flag that will be updated if we want to print this line
+                $fst{$temp[0]."_".$temp[1]}{"stop"} = $temp[2]; # this is a flag that will be updated if we want to print this line
+                $fst{$temp[0]."_".$temp[1]}{"print_or_not"} = 0; # this is a flag that will be updated if we want to print this line
+        }
+        else{
+                $firstline=$line;
+        }
+}
+close DATAINPUT;
+
+# OK now check to see if genes are in these windows
+my $inputfile1 = $ARGV[1]; # the name of the gff file is from the commandline
+unless (open DATAINPUT2, $inputfile1) {
+        print "Can not find the gff file.\n";
+        exit;
+}
+my $start;
+my $value;
+# go through each line in the gff file
+while ( my $line = <DATAINPUT2>) {
+        @temp=split('\t',$line);
+        foreach my $key (keys %fst){
+        if (($fst{$key}{"chr"} eq $temp[0])&&
+                (
+                (($fst{$key}{"start"} <= $temp[3])&&($fst{$key}{"start"} + $windowsize >= $temp[3])) # the start of the gene is in the window
+                ||
+                (($fst{$key}{"stop"} - $windowsize <= $temp[4])&&($fst{$key}{"stop"} >= $temp[4])) # the end of the gene is in the window
+                ))
+                {
+                        # gene is in this block, so print it
+                        $fst{$key}{"print_or_not"} = 1;
+        }
+        }
+}
+close DATAINPUT2;
+
+my $outputfile = $ARGV[2]; # the name of the output file is from the commandline
+unless (open(OUTFILE, ">$outputfile"))  {
+        print "I can\'t write to $outputfile\n";
+        exit;
+}
+
+print OUTFILE $firstline;
+foreach my $key (sort keys %fst){
+    if ($fst{$key}{"print_or_not"} == 1) {
+             print OUTFILE $fst{$key}{"line"};
+    }
+}
+
+close OUTFILE;
+
+```
+Run the script like following
+
+run_filter_gene_blocks.sh
+```bash
+#!/bin/sh
+#SBATCH --job-name=bwa_505
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --time=12:00:00
+#SBATCH --mem=16G
+#SBATCH --output=bwa505.%J.out
+#SBATCH --error=bwa505.%J.err
+#SBATCH --account=def-ben
+
+#SBATCH --mail-user=premacht@mcmaster.ca
+#SBATCH --mail-type=BEGIN
+#SBATCH --mail-type=END
+#SBATCH --mail-type=FAIL
+#SBATCH --mail-type=REQUEUE
+#SBATCH --mail-type=ALL
+
+./Prints_Fst_blocks_with_genes.pl laevis_GBS_2020_l_only_positions_excluded_5k_final_fst.csv XLv9.2_xenbase_annotations_exons_only.gff window5k_filtered_exons_l_only.csv
+
+./Prints_Fst_blocks_with_genes.pl laevis_GBS_2020_s_only_positions_excluded_5k_final_fst.csv XLv9.2_xenbase_annotations_exons_only.gff window5k_filtered_exons_s_only.csv
+
+```
+
+Then use jacknife and prepare the output for plotting
+
+test_block_jackknife_withFst.pl
+
+```perl
+#!/usr/bin/env perl
+use strict;
+use warnings;
+
+
+# This program reads in the output of the script called 
+# and calculates the standard error of the weighted mean value of fDM with weightings based 
+# on the sum of the number of abba and baba sites in each window.
+
+my $inputfile = $ARGV[0];
+
+# print headers first
+
+print "pop1","\t","pop2","\t","Fst","\t","CI_1","\t","CI2","\n";
+
+#loop for selected columns
+my @selected_chrs = (84..149);
+
+for my $j (@selected_chrs){
+
+#take column no
+
+my $chr = $j;
+
+unless (open DATAINPUT, $inputfile) {
+        print "Can not find the input file.\n";
+        exit;
+}
+
+my @windowsites;
+my @Fst_values;
+my $sumsites=0;
+my $counter=0;
+my @temp;
+my $y;
+my $x;
+
+while ( my $line = <DATAINPUT>) {
+        @temp=split(',',$line);
+        if($temp[0] ne 'scaffold'){
+                # if fDM is not numeric, it shouldn't contribute to the weighted average
+                if($temp[$chr] !~ /nan/){
+                        # load the number of sites for each window
+                        $windowsites[$counter]=$temp[4];
+                        # also load the Fst for each window
+                        $Fst_values[$counter]=$temp[$chr];
+                        # sum all the sites
+                        $sumsites+= $temp[4];
+                        # keep track of how many windows are loaded
+                        $counter+=1;
+                }
+        }
+}
+
+my $weighted_Fst_average=0;
+
+# calculate the weighted average of Fst
+for ($y = 0 ; $y <= $#Fst_values; $y++ ) {
+        $weighted_Fst_average+=($windowsites[$y]*$Fst_values[$y]/$sumsites);
+}
+
+# Print it
+# print "The weighted Fst average is ",sprintf("%.6f",$weighted_Fst_average),"\n";
+
+
+# now calculate the standard error.
+my @jack_sumsites;
+my $jack_averagesites;
+my @jack_fst_values;
+my $jack_weighted_average=0;
+my @jack_weighted_fdm_values;
+my @jackarray;
+my $counter2=0;
+
+for ($y = 0 ; $y < $counter; $y++ ) {
+        for ($x = 0 ; $x < $counter; $x++ ) {
+                # leave out one row for each jackknfe replicates
+                if($y != $x){
+                        # load the number of sites for each window
+                        $jack_sumsites[$counter2]=$windowsites[$x];
+                        # add them up to eventually get the average
+                        $jack_averagesites+=$windowsites[$x];
+                        # also load the Fst stat for each window
+                        $jack_fst_values[$counter2]=$Fst_values[$x];
+                        # keep track of the number of windows
+                        $counter2+=1;
+                }
+        }
+        # make the $jack_averagesites an average
+        $jack_averagesites=$jack_averagesites/($counter2);
+        # calculate the weighted average
+        for ($x = 0 ; $x < $counter2; $x++ ) {
+                $jack_weighted_average+=($jack_sumsites[$x]*$jack_fst_values[$x]/$jack_averagesites);
+        }
+        push(@jackarray,($jack_weighted_average/$counter2));
+        # reset variables
+        $jack_weighted_average=0;
+        $jack_averagesites=0;
+        @jack_fst_values=();
+        $counter2=0;
+}
+
+# now calculate the variance of the jackknife replicates
+
+# first we need the mean
+my $jack_mean=0;
+for ($x = 0 ; $x < $counter; $x++ ) {
+        $jack_mean+=$jackarray[$x];
+}
+$jack_mean=$jack_mean/($counter);
+
+my $jack_var=0;
+for ($x = 0 ; $x < $counter; $x++ ) {
+        $jack_var+=($jack_mean-$jackarray[$x])**2;
+}
+# for the sample variance, divide by (n-1)
+#print "jack_fst_var ",sprintf("%.9f",$jack_var/($counter-1)),"\n";
+my $sterr = sqrt($counter*($jack_var/($counter-1)));
+#print "The standard error of the weighted fst is ",sprintf("%.5f",$sterr),"\n";
+#print "The 95\%CI of the weighted fst is ",
+#sprintf("%.6f",($weighted_Fst_average-1.96*$sterr))," - ",sprintf("%.6f",($weighted_Fst_average+1.96*$sterr)),"\n";
+
+
+#get col names
+my $header = `head -n 1 $inputfile`;
+chomp ($header);
+my @colnames = split (/,/,$header);
+
+my $pops = @colnames[$chr];
+
+chomp ($pops);
+my @popnames = split (/_/,$pops);
+
+
+# print "\n","\n","\n","summary","\n","\n","\n";
+# trying tab seperated fst outputs
+
+#print "pop1","\t","pop2","\t","Fst","\t","CI_1","\t","CI2","\n";
+
+print $popnames[1],"\t",$popnames[2],"\t",sprintf("%.6f",$weighted_Fst_average),"\t",sprintf("%.6f",($weighted_Fst_average-1.96*$sterr)),"\t",sprintf("%.6f",($weighted_Fst_average+1.96*$sterr)),"\n";
+}
+
+close DATAINPUT;
+
+```
+run it like follwing
+
+```bash
+#!/bin/sh
+#SBATCH --job-name=bwa_505
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --time=24:00:00
+#SBATCH --mem=64G
+#SBATCH --output=bwa505.%J.out
+#SBATCH --error=bwa505.%J.err
+#SBATCH --account=def-ben
+
+#SBATCH --mail-user=premacht@mcmaster.ca
+#SBATCH --mail-type=BEGIN
+#SBATCH --mail-type=END
+#SBATCH --mail-type=FAIL
+#SBATCH --mail-type=REQUEUE
+#SBATCH --mail-type=ALL
+
+for i in *_only.csv ; do perl test_block_jackknife_withFst.pl ${i} > ${i}_fst_summary.tsv ; done
+
+```
+
+Then download the file and check whether the number of rows to read match the following r code 
+Put the output files from above jacknife script in a folder named 'fst_outputs'.
+save this r script in in the same location where the 'fst_outputs' folder is.
+change the file names to read as needed and run the r script.
+
+All the plots wil be there with the R script
+
+
+plot_fst_with_CI.R
+``` r
+#set current path as wd
+library("rstudioapi") 
+setwd(dirname(getActiveDocumentContext()$path))
+
+library(ggplot2)
+
+# import data tables ( an extra row had been added at the end of the table because of a mistake and removed it here-the 67th was just empty)
+l_only_data<-read.table("./fst_outputs/window5k_filtered_exons_l_only_fst_summary.tsv",nrows = 65,header = TRUE)
+s_only_data<-read.table("./fst_outputs/window5k_filtered_exons_s_only_fst_summary.tsv",nrows = 65,header = TRUE)
+#whole_genome_data<-read.table("./fst_outputs/laevis_GBS_2020_whole_genome_positions_excluded_final_fst.csv_fst_summary.tsv",nrows = 65,header = TRUE)
+
+
+# make a list for 3 plot cluster
+three_plot_list<-list()
+
+# loop through all population combinations
+
+for (i in 1:65) {
+  
+
+#prepare l only
+l_only_pop_name<-c(1)
+l_only_fst<-c(as.numeric(l_only_data[[i,3]]))
+l_only_CI_1<-c(as.numeric(l_only_data[[i,4]]))
+l_only_CI_2<-c(as.numeric(l_only_data[[i,5]]))
+
+l_only_full_df<-data.frame(l_only_pop_name,l_only_fst,l_only_CI_1,l_only_CI_2)
+
+
+
+colnames(l_only_full_df)<-c(as.character(l_only_data[[i,1]]),as.character(l_only_data[[i,2]]),"l_only_CI_1","l_only_CI_2")
+
+#prepare s only
+
+s_only_pop_name<-c(2)
+s_only_fst<-c(as.numeric(s_only_data[[i,3]]))
+s_only_CI_1<-c(as.numeric(s_only_data[[i,4]]))
+s_only_CI_2<-c(as.numeric(s_only_data[[i,5]]))
+
+s_only_full_df<-data.frame(s_only_pop_name,s_only_fst,s_only_CI_1,s_only_CI_2)
+
+
+colnames(s_only_full_df)<-c(as.character(s_only_data[[i,1]]),as.character(s_only_data[[i,2]]),"s_only_CI_1","s_only_CI_2")
+
+#prepare whole genome( removed this part below in the plot)
+
+#whole_genome_pop_name<-c(2)
+#whole_genome_fst<-c(as.numeric(whole_genome_data[[i,3]]))
+#whole_genome_CI_1<-c(as.numeric(whole_genome_data[[i,4]]))
+#whole_genome_CI_2<-c(as.numeric(whole_genome_data[[i,5]]))
+
+#whole_genome_full_df<-data.frame(whole_genome_pop_name,whole_genome_fst,whole_genome_CI_1,whole_genome_CI_2)
+
+
+#colnames(whole_genome_full_df)<-c(as.character(whole_genome_data[[i,1]]),as.character(whole_genome_data[[i,2]]),"whole_genome_CI_1","whole_genome_CI_2")
+
+# get column name for geom_point
+current_pop_l<-as.character(l_only_data[[i,2]])
+current_pop_s<-as.character(s_only_data[[i,2]])
+
+#plot
+
+plot_cluster<-ggplot(data = l_only_full_df,aes(x = l_only_full_df[,1],y = l_only_full_df[,2]))+
+  ylim(0,0.5)+
+  scale_x_continuous(breaks = c(1,2),labels = c("L","S"))+
+  geom_errorbar(data = l_only_full_df, mapping = aes(x = l_only_full_df[,1],y = l_only_full_df[,2], ymin =l_only_CI_1, ymax = l_only_CI_2), size=2, width=.3,color="blue")+
+  geom_point(data = l_only_full_df, mapping = aes_string(x = l_only_full_df[,1],y = current_pop_l),shape=15, size=3,color="black")+
+  geom_errorbar(data = s_only_full_df, mapping = aes(x = s_only_full_df[,1],y = s_only_full_df[,2], ymin =s_only_CI_1, ymax = s_only_CI_2), size=2, width=.3,color="red")+
+  geom_point(data = s_only_full_df, mapping = aes_string(x = s_only_full_df[,1],y = current_pop_s),shape=15, size=3,color="black")+
+ #geom_errorbar(data = whole_genome_full_df, mapping = aes(x = whole_genome_full_df[,1],y = whole_genome_full_df[,2], ymin =whole_genome_CI_1, ymax = whole_genome_CI_2), size=1, width=.1,color="black")+
+ # geom_point(data = whole_genome_full_df, mapping = aes(x = whole_genome_full_df[,1],y = whole_genome_full_df[,2]),shape=15, size=1,color="grey")+
+  theme_bw()+
+  ylab(as.character(l_only_data[[i,1]]))+
+  xlab(as.character(l_only_data[[i,2]]))+
+  theme(text = element_text(size=20,face = "bold"))+
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+
+# save plot
+
+three_plot_list[[i]]<-plot_cluster
+}
+
+#create final plot adding all plots together
+
+library(gridExtra)
+Final_plot_grid<-grid.arrange(
+  grobs = three_plot_list,
+  ncol=8
+  
+  #widths = c(2, 2),
+  #heights=c(2,1)
+)
+
+ggsave(filename = "full_pop_list_plots.pdf",plot = Final_plot_grid,height = 45,width =25 )
+
+# ************ selected plots **************
+
+# select only the populations with at lease 5 samples
+
+selected_plot_list<-list()
+i <-1
+exclude <- c(5,10,11:20,24,29,32,37,39,44,45,50:55,59,62,64,65)
+for(selected_pops in (1:65)[-exclude]){
+  selected_plot_list[[i]]<-three_plot_list[[selected_pops]]
+  i<-i+1
+}
+
+selected_plot_grid<-grid.arrange(
+  grobs = selected_plot_list,
+  ncol=10
+  
+  #widths = c(2, 2),
+  #heights=c(2,1)
+)
+
+ggsave(filename = "selected_pop_list_plots.pdf",plot = selected_plot_grid,height = 45,width =25 )
+
+# create an identical - non visible plot to fill the gaps( just using whatever data I have in here)
+
+plot_blank<-ggplot(data = l_only_full_df,aes(x = l_only_full_df[,1],y = l_only_full_df[,2]))+
+  ylim(0,0.5)+
+  scale_x_continuous(breaks = c(1,2),labels = c("L only","S only"))+
+  geom_errorbar(data = l_only_full_df, mapping = aes(x = l_only_full_df[,1],y = l_only_full_df[,2], ymin =l_only_CI_1, ymax = l_only_CI_2), size=2, width=.3,color="white")+
+  theme_bw()+
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())+
+  theme(axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())+
+  #uncomment the following line to see just gridlines
+  theme(panel.border = element_blank(), panel.grid.major = element_blank(),panel.grid.minor = element_blank())
+
+#preparing plot lists seperately for each of the populations combined with blank plots to create triangle shaped plot
+
+final_plot_list_with_blanks<-list()
+
+# flip all thes axes so sommon axes comes to y ( so I can reduce labelling used)
+
+# **********************
+
+# for Inhaca
+# first plot with Y lab
+final_plot_list_with_blanks[[1]]<-selected_plot_list[[1]]
+
+#second to end without labs
+for (plot_no in 2:8) {
+  final_plot_list_with_blanks[[plot_no]]<-selected_plot_list[[plot_no]]+
+    theme(axis.title.y = element_blank(),
+          axis.text.y=element_blank())
+}
+
+# **********************
+
+# for DeDorn
+
+# first plot as a blank
+
+final_plot_list_with_blanks[[9]]<-plot_blank
+
+# plot with Y lab
+final_plot_list_with_blanks[[10]]<-selected_plot_list[[9]]
+
+#without labs
+for (plot_no in 11:16) {
+  final_plot_list_with_blanks[[plot_no]]<-selected_plot_list[[plot_no-1]]+
+    theme(axis.title.y = element_blank(),
+          axis.text.y=element_blank())
+}
+
+
+
+# **********************
+
+# for Laigns
+
+# first plots as a blank
+
+for (blank_plot_no in 17:18) {
+  final_plot_list_with_blanks[[blank_plot_no]]<-plot_blank
+}
+
+# plot with Y lab
+final_plot_list_with_blanks[[19]]<-selected_plot_list[[16]]
+
+#without labs
+for (plot_no in 20:24) {
+  final_plot_list_with_blanks[[plot_no]]<-selected_plot_list[[plot_no-3]]+
+    theme(axis.title.y = element_blank(),
+          axis.text.y=element_blank())
+}
+
+
+
+# **********************
+
+# for BW
+
+# first plots as a blank
+
+for (blank_plot_no in 25:27) {
+  final_plot_list_with_blanks[[blank_plot_no]]<-plot_blank
+}
+
+# plot with Y lab
+final_plot_list_with_blanks[[28]]<-selected_plot_list[[22]]
+
+#without labs
+for (plot_no in 29:32) {
+  final_plot_list_with_blanks[[plot_no]]<-selected_plot_list[[plot_no-6]]+
+    theme(axis.title.y = element_blank(),
+          axis.text.y=element_blank())
+}
+
+
+
+# **********************
+
+# for GRNP
+
+# first plots as a blank
+
+for (blank_plot_no in 33:36) {
+  final_plot_list_with_blanks[[blank_plot_no]]<-plot_blank
+}
+
+#  plot with Y lab
+final_plot_list_with_blanks[[37]]<-selected_plot_list[[27]]
+
+# without labs
+for (plot_no in 38:40) {
+  final_plot_list_with_blanks[[plot_no]]<-selected_plot_list[[plot_no-10]]+
+    theme(axis.title.y = element_blank(),
+          axis.text.y=element_blank())
+}
+
+
+
+# **********************
+
+# for Kimber
+
+# first plots as a blank
+
+for (blank_plot_no in 41:45) {
+  final_plot_list_with_blanks[[blank_plot_no]]<-plot_blank
+}
+
+# plot with Y lab
+final_plot_list_with_blanks[[46]]<-selected_plot_list[[31]]
+
+#without labs
+for (plot_no in 47:48) {
+  final_plot_list_with_blanks[[plot_no]]<-selected_plot_list[[plot_no-15]]+
+    theme(axis.title.y = element_blank(),
+          axis.text.y=element_blank())
+}
+
+
+
+# **********************
+
+# for newou
+
+# first plots as a blank
+
+for (blank_plot_no in 49:54) {
+  final_plot_list_with_blanks[[blank_plot_no]]<-plot_blank
+}
+
+#  plot with Y lab
+final_plot_list_with_blanks[[55]]<-selected_plot_list[[34]]
+
+# without labs
+for (plot_no in 56) {
+  final_plot_list_with_blanks[[plot_no]]<-selected_plot_list[[plot_no-21]]+
+    theme(axis.title.y = element_blank(),
+          axis.text.y=element_blank())
+}
+
+
+
+# **********************
+
+# for threesis
+
+# last plots as a blank
+
+for (blank_plot_no in 57:63) {
+  final_plot_list_with_blanks[[blank_plot_no]]<-plot_blank
+}
+
+# first plot with Y lab
+final_plot_list_with_blanks[[64]]<-selected_plot_list[[36]]
+
+#second to end without labs - no plots without labs here
+
+
+# preparing layout matrix for plot layout
+lay<-rbind(c(1,1,1,1,2,2,2,3,3,3,4,4,4,5,5,5,6,6,6,7,7,7,8,8,8),
+      c(9,9,9,10,10,10,10,11,11,11,12,12,12,13,13,13,14,14,14,15,15,15,16,16,16),
+      c(17,17,17,18,18,18,19,19,19,19,20,20,20,21,21,21,22,22,22,23,23,23,24,24,24),
+      c(25,25,25,26,26,26,27,27,27,28,28,28,28,29,29,29,30,30,30,31,31,31,32,32,32),
+      c(33,33,33,34,34,34,35,35,35,36,36,36,37,37,37,37,38,38,38,39,39,39,40,40,40),
+      c(41,41,41,42,42,42,43,43,43,44,44,44,45,45,45,46,46,46,46,47,47,47,48,48,48),
+      c(49,49,49,50,50,50,51,51,51,52,52,52,53,53,53,54,54,54,55,55,55,55,56,56,56),
+      c(57,57,57,58,58,58,59,59,59,60,60,60,61,61,61,62,62,62,63,63,63,64,64,64,64))
+
+# print plot list with blanks
+selected_plot_grid_with_blanks<-grid.arrange(
+  grobs = final_plot_list_with_blanks,
+  
+  #widths = c(2.5,2,2,2,2,2,2,2),
+  layout_matrix =lay 
+  
+  #heights=c(2,1)
+)
+
+ggsave(filename = "selected_pop_list_with_blanks.pdf",plot = selected_plot_grid_with_blanks,height = 75,width =15 ,limitsize = FALSE)
+
+
+```
+
+
+
 
 ## ===========>>>>> POPULATION STRUCTURE ANALYSIS ===========>>>>>>>
 
